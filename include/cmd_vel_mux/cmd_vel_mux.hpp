@@ -36,22 +36,14 @@ namespace cmd_vel_mux
  ** CmdVelMux
  *****************************************************************************/
 
-class CmdVelMuxNodelet : public nodelet::Nodelet
+class CmdVelMuxNodelet final : public nodelet::Nodelet
 {
 public:
   virtual void onInit();
 
-  CmdVelMuxNodelet()
-  {
-    cmd_vel_subs.allowed = VACANT;
-    dynamic_reconfigure_server = NULL;
-  }
+  CmdVelMuxNodelet();
 
-  ~CmdVelMuxNodelet()
-  {
-    if (dynamic_reconfigure_server != NULL)
-      delete dynamic_reconfigure_server;
-  }
+  ~CmdVelMuxNodelet();
 
 private:
   static const unsigned int VACANT       = 666666;  /**< ID for "nobody" active input; anything big is ok */

@@ -27,6 +27,20 @@ namespace cmd_vel_mux {
  ** Implementation
  *****************************************************************************/
 
+CmdVelMuxNodelet::CmdVelMuxNodelet()
+{
+  cmd_vel_subs.allowed = VACANT;
+  dynamic_reconfigure_server = NULL;
+}
+
+CmdVelMuxNodelet::~CmdVelMuxNodelet()
+{
+  if (dynamic_reconfigure_server != NULL)
+  {
+    delete dynamic_reconfigure_server;
+  }
+}
+
 void CmdVelMuxNodelet::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsigned int idx)
 {
   // Reset general timer
