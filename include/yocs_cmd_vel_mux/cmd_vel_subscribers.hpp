@@ -10,8 +10,8 @@
 ** Ifdefs
 *****************************************************************************/
 
-#ifndef YUJIN_OCS_CMD_VEL_SUBSCRIBERS_HPP_
-#define YUJIN_OCS_CMD_VEL_SUBSCRIBERS_HPP_
+#ifndef CMD_VEL_MUX__CMD_VEL_SUBSCRIBERS_HPP_
+#define CMD_VEL_MUX__CMD_VEL_SUBSCRIBERS_HPP_
 
 /*****************************************************************************
 ** Includes
@@ -22,7 +22,6 @@
 #include <vector>
 
 #include <ros/ros.h>
-#include <geometry_msgs/Twist.h>
 
 #include <yaml-cpp/yaml.h>
 
@@ -41,7 +40,8 @@ void operator >> (const YAML::Node& node, T& i)
 ** Namespaces
 *****************************************************************************/
 
-namespace yocs_cmd_vel_mux {
+namespace cmd_vel_mux
+{
 
 
 /*****************************************************************************
@@ -97,7 +97,7 @@ private:
   std::vector<std::shared_ptr<CmdVelSub>> list;
 };
 
-} // namespace yocs_cmd_vel_mux
+} // namespace cmd_vel_mux
 
 
-#endif /* CMD_VEL_SUBSCRIBERS_HPP_ */
+#endif /* CMD_VEL_MUX__CMD_VEL_SUBSCRIBERS_HPP_ */

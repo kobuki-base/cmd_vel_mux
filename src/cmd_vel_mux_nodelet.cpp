@@ -21,7 +21,7 @@
 ** Namespaces
 *****************************************************************************/
 
-namespace yocs_cmd_vel_mux {
+namespace cmd_vel_mux {
 
 /*****************************************************************************
  ** Implementation
@@ -93,7 +93,7 @@ void CmdVelMuxNodelet::onInit()
   ** Dynamic Reconfigure
   **********************/
   dynamic_reconfigure_cb = boost::bind(&CmdVelMuxNodelet::reloadConfiguration, this, _1, _2);
-  dynamic_reconfigure_server = new dynamic_reconfigure::Server<yocs_cmd_vel_mux::reloadConfig>(nh);
+  dynamic_reconfigure_server = new dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig>(nh);
   dynamic_reconfigure_server->setCallback(dynamic_reconfigure_cb);
 
   active_subscriber = nh.advertise <std_msgs::String> ("active", 1, true); // latched topic
@@ -107,7 +107,7 @@ void CmdVelMuxNodelet::onInit()
   NODELET_DEBUG("CmdVelMux : successfully initialized");
 }
 
-void CmdVelMuxNodelet::reloadConfiguration(yocs_cmd_vel_mux::reloadConfig &config, uint32_t unused_level)
+void CmdVelMuxNodelet::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t unused_level)
 {
   ros::NodeHandle &pnh = this->getPrivateNodeHandle();
 
@@ -243,6 +243,6 @@ void CmdVelMuxNodelet::reloadConfiguration(yocs_cmd_vel_mux::reloadConfig &confi
   NODELET_INFO_STREAM("CmdVelMux : (re)configured");
 }
 
-} // namespace yocs_cmd_vel_mux
+} // namespace cmd_vel_mux
 
-PLUGINLIB_EXPORT_CLASS(yocs_cmd_vel_mux::CmdVelMuxNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(cmd_vel_mux::CmdVelMuxNodelet, nodelet::Nodelet);

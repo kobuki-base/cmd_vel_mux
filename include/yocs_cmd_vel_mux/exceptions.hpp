@@ -10,8 +10,8 @@
 ** Ifdefs
 *****************************************************************************/
 
-#ifndef YUJIN_OCS_CMD_VEL_EXCEPTIONS_HPP_
-#define YUJIN_OCS_CMD_VEL_EXCEPTIONS_HPP_
+#ifndef CMD_VEL_MXU__EXCEPTIONS_HPP_
+#define CMD_VEL_MUX__EXCEPTIONS_HPP_
 
 /*****************************************************************************
 ** Includes
@@ -23,7 +23,8 @@
 ** Namespaces
 *****************************************************************************/
 
-namespace yocs_cmd_vel_mux {
+namespace cmd_vel_mux
+{
 
 /*****************************************************************************
 ** Exceptions
@@ -50,6 +51,6 @@ public:
         virtual ~YamlException() throw() {}
 };
 
-} // namespace yocs_cmd_vel_mux
+} // namespace cmd_vel_mux
 
-#endif /* YUJIN_OCS_CMD_VEL_EXCEPTIONS_HPP_ */
+#endif /* CMD_VEL_MUX__CMD_VEL_EXCEPTIONS_HPP_ */

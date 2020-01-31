@@ -19,7 +19,8 @@
 ** Namespaces
 *****************************************************************************/
 
-namespace yocs_cmd_vel_mux {
+namespace cmd_vel_mux
+{
 
 /*****************************************************************************
  ** Implementation
@@ -108,4 +109,4 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
 }
 
 
-} // namespace yocs_cmd_vel_mux
+} // namespace cmd_vel_mux
