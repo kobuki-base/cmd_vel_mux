@@ -36,14 +36,14 @@ namespace cmd_vel_mux
  ** CmdVelMux
  *****************************************************************************/
 
-class CmdVelMuxNodelet final : public nodelet::Nodelet
+class CmdVelMux final : public nodelet::Nodelet
 {
 public:
   virtual void onInit();
 
-  CmdVelMuxNodelet();
+  CmdVelMux();
 
-  ~CmdVelMuxNodelet();
+  ~CmdVelMux();
 
 private:
   static const unsigned int VACANT       = 666666;  /**< ID for "nobody" active input; anything big is ok */

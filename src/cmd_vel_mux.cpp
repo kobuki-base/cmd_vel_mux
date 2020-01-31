@@ -27,14 +27,14 @@ namespace cmd_vel_mux
 /*********************
  ** Private Classes
  **********************/
-class CmdVelMuxNodelet::CmdVelFunctor
+class CmdVelMux::CmdVelFunctor
 {
 private:
   unsigned int idx;
-  CmdVelMuxNodelet* node;
+  CmdVelMux* node;
 
 public:
-  CmdVelFunctor(unsigned int idx, CmdVelMuxNodelet* node) :
+  CmdVelFunctor(unsigned int idx, CmdVelMux* node) :
       idx(idx), node(node)
   {
   }
@@ -45,14 +45,14 @@ public:
   }
 };
 
-class CmdVelMuxNodelet::TimerFunctor
+class CmdVelMux::TimerFunctor
 {
 private:
   unsigned int idx;
-  CmdVelMuxNodelet* node;
+  CmdVelMux* node;
 
 public:
-  TimerFunctor(unsigned int idx, CmdVelMuxNodelet* node) :
+  TimerFunctor(unsigned int idx, CmdVelMux* node) :
       idx(idx), node(node)
   {
   }
@@ -67,13 +67,13 @@ public:
  ** Implementation
  *****************************************************************************/
 
-CmdVelMuxNodelet::CmdVelMuxNodelet()
+CmdVelMux::CmdVelMux()
 {
   cmd_vel_subs.allowed = VACANT;
   dynamic_reconfigure_server = NULL;
 }
 
-CmdVelMuxNodelet::~CmdVelMuxNodelet()
+CmdVelMux::~CmdVelMux()
 {
   if (dynamic_reconfigure_server != NULL)
   {
@@ -81,7 +81,7 @@ CmdVelMuxNodelet::~CmdVelMuxNodelet()
   }
 }
 
-void CmdVelMuxNodelet::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsigned int idx)
+void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsigned int idx)
 {
   // Reset general timer
   common_timer.stop();
@@ -113,7 +113,7 @@ void CmdVelMuxNodelet::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg,
   }
 }
 
-void CmdVelMuxNodelet::timerCallback(const ros::TimerEvent& event, unsigned int idx)
+void CmdVelMux::timerCallback(const ros::TimerEvent& event, unsigned int idx)
 {
   if (cmd_vel_subs.allowed == idx || (idx == GLOBAL_TIMER && cmd_vel_subs.allowed != VACANT))
   {
@@ -141,14 +141,14 @@ void CmdVelMuxNodelet::timerCallback(const ros::TimerEvent& event, unsigned int 
   }
 }
 
-void CmdVelMuxNodelet::onInit()
+void CmdVelMux::onInit()
 {
   ros::NodeHandle &nh = this->getPrivateNodeHandle();
 
   /*********************
   ** Dynamic Reconfigure
   **********************/
-  dynamic_reconfigure_cb = boost::bind(&CmdVelMuxNodelet::reloadConfiguration, this, _1, _2);
+  dynamic_reconfigure_cb = boost::bind(&CmdVelMux::reloadConfiguration, this, _1, _2);
   dynamic_reconfigure_server = new dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig>(nh);
   dynamic_reconfigure_server->setCallback(dynamic_reconfigure_cb);
 
@@ -163,7 +163,7 @@ void CmdVelMuxNodelet::onInit()
   NODELET_DEBUG("CmdVelMux : successfully initialized");
 }
 
-void CmdVelMuxNodelet::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t unused_level)
+void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t unused_level)
 {
   ros::NodeHandle &pnh = this->getPrivateNodeHandle();
 
@@ -303,4 +303,4 @@ void CmdVelMuxNodelet::reloadConfiguration(cmd_vel_mux::reloadConfig &config, ui
 
 } // namespace cmd_vel_mux
 
-PLUGINLIB_EXPORT_CLASS(cmd_vel_mux::CmdVelMuxNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(cmd_vel_mux::CmdVelMux, nodelet::Nodelet);
