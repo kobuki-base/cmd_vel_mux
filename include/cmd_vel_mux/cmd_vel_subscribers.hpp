@@ -84,7 +84,6 @@ public:
   /**
    * @brief Configures the subscribers from a yaml file.
    *
-   * @exception FileNotFoundException : yaml file not found
    * @exception YamlException : problem parsing the yaml
    * @exception EmptyCfgException : empty configuration file
    * @param node : node holding all the subscriber configuration

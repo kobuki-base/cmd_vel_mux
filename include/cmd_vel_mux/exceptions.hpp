@@ -30,13 +30,6 @@ namespace cmd_vel_mux
 ** Exceptions
 *****************************************************************************/
 
-class FileNotFoundException: public std::runtime_error {
-public:
-  FileNotFoundException(const std::string& msg)
-        : std::runtime_error(msg) {}
-        virtual ~FileNotFoundException() throw() {}
-};
-
 class EmptyCfgException: public std::runtime_error {
 public:
   EmptyCfgException(const std::string& msg)
