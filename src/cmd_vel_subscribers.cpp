@@ -95,14 +95,11 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
 
     list = new_list;
   }
-  catch(EmptyCfgException& e) {
-    throw e;
-  }
-  catch(YAML::ParserException& e)
+  catch(const YAML::ParserException& e)
   {
     throw YamlException(e.what());
   }
-  catch(YAML::RepresentationException& e)
+  catch(const YAML::RepresentationException& e)
   {
     throw YamlException(e.what());
   }
