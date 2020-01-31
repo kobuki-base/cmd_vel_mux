@@ -14,7 +14,7 @@
 #include <std_msgs/String.h>
 #include <pluginlib/class_list_macros.h>
 
-#include "cmd_vel_mux/cmd_vel_mux_nodelet.hpp"
+#include "cmd_vel_mux/cmd_vel_mux.hpp"
 #include "cmd_vel_mux/exceptions.hpp"
 
 /*****************************************************************************
