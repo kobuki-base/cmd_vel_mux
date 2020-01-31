@@ -1,4 +1,6 @@
-<package>
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
   <name>cmd_vel_mux</name>
   <version>0.12.1</version>
   <description>
@@ -23,12 +25,12 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>yaml-cpp</build_depend>
 
-  <run_depend>roscpp</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>pluginlib</run_depend>
-  <run_depend>nodelet</run_depend>
-  <run_depend>dynamic_reconfigure</run_depend>
-  <run_depend>yaml-cpp</run_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>pluginlib</exec_depend>
+  <exec_depend>nodelet</exec_depend>
+  <exec_depend>dynamic_reconfigure</exec_depend>
+  <exec_depend>yaml-cpp</exec_depend>
 
   <export>
     <nodelet plugin="${prefix}/plugins/nodelets.xml" />
