@@ -65,6 +65,11 @@ void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
   }
 }
 
+unsigned int CmdVelSubscribers::CmdVelSub::getPriority() const
+{
+  return priority_;
+}
+
 std::vector<std::shared_ptr<CmdVelSubscribers::CmdVelSub>>::size_type CmdVelSubscribers::size()
 {
   return list_.size();

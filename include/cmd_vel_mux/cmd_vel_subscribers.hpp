@@ -51,30 +51,34 @@ namespace cmd_vel_mux
 /**
  * Pool of cmd_vel topics subscribers
  */
-class CmdVelSubscribers
+class CmdVelSubscribers final
 {
 public:
 
   /**
    * Inner class describing an individual subscriber to a cmd_vel topic
    */
-  class CmdVelSub
+  class CmdVelSub final
   {
   public:
+    explicit CmdVelSub(unsigned int idx);
+
+    unsigned int getPriority() const;
+
     unsigned int           idx_;          /**< Index; assigned according to the order on YAML file */
     std::string            name_;         /**< Descriptive name; must be unique to this subscriber */
     std::string            topic_;        /**< The name of the topic */
     ros::Subscriber        subs_;         /**< The subscriber itself */
     ros::Timer             timer_;        /**< No incoming messages timeout */
     double                 timeout_;      /**< Timer's timeout, in seconds  */
-    unsigned int           priority_;     /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
-    std::string            short_desc_;   /**< Short description (optional) */
     bool                   active_;       /**< Whether this source is active */
-
-    explicit CmdVelSub(unsigned int idx);
 
     /** Fill attributes with a YAML node content */
     void operator << (const YAML::Node& node);
+
+  private:
+    unsigned int           priority_;     /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
+    std::string            short_desc_;   /**< Short description (optional) */
   };
 
 
