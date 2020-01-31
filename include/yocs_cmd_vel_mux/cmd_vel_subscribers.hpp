@@ -67,8 +67,8 @@ public:
     std::string            short_desc;   /**< Short description (optional) */
     bool                   active;       /**< Whether this source is active */
 
-    CmdVelSubs(unsigned int idx) : idx(idx), active(false) { };
-    ~CmdVelSubs() { }
+    explicit CmdVelSubs(unsigned int idx);
+    ~CmdVelSubs() = default;
 
     /** Fill attributes with a YAML node content */
     void operator << (const YAML::Node& node);

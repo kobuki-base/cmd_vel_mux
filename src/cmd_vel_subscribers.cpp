@@ -25,6 +25,10 @@ namespace yocs_cmd_vel_mux {
  ** Implementation
  *****************************************************************************/
 
+CmdVelSubscribers::CmdVelSubs::CmdVelSubs(unsigned int idx) : idx(idx), active(false)
+{
+}
+
 void CmdVelSubscribers::CmdVelSubs::operator << (const YAML::Node& node)
 {
   // Fill attributes with a YAML node content
