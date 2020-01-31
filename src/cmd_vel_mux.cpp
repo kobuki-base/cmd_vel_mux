@@ -23,6 +23,45 @@
 
 namespace cmd_vel_mux {
 
+/*********************
+ ** Private Classes
+ **********************/
+class CmdVelMuxNodelet::CmdVelFunctor
+{
+private:
+  unsigned int idx;
+  CmdVelMuxNodelet* node;
+
+public:
+  CmdVelFunctor(unsigned int idx, CmdVelMuxNodelet* node) :
+      idx(idx), node(node)
+  {
+  }
+
+  void operator()(const geometry_msgs::Twist::ConstPtr& msg)
+  {
+    node->cmdVelCallback(msg, idx);
+  }
+};
+
+class CmdVelMuxNodelet::TimerFunctor
+{
+private:
+  unsigned int idx;
+  CmdVelMuxNodelet* node;
+
+public:
+  TimerFunctor(unsigned int idx, CmdVelMuxNodelet* node) :
+      idx(idx), node(node)
+  {
+  }
+
+  void operator()(const ros::TimerEvent& event)
+  {
+    node->timerCallback(event, idx);
+  }
+};
+
 /*****************************************************************************
  ** Implementation
  *****************************************************************************/

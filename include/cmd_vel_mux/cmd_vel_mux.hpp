@@ -69,43 +69,12 @@ private:
   /*********************
    ** Private Classes
    **********************/
+
   // Functor assigned to each incoming velocity topic to bind it to cmd_vel callback
-  class CmdVelFunctor
-  {
-  private:
-    unsigned int idx;
-    CmdVelMuxNodelet* node;
-
-  public:
-    CmdVelFunctor(unsigned int idx, CmdVelMuxNodelet* node) :
-        idx(idx), node(node)
-    {
-    }
-
-    void operator()(const geometry_msgs::Twist::ConstPtr& msg)
-    {
-      node->cmdVelCallback(msg, idx);
-    }
-  };
+  class CmdVelFunctor;
 
   // Functor assigned to each velocity messages source to bind it to timer callback
-  class TimerFunctor
-  {
-  private:
-    unsigned int idx;
-    CmdVelMuxNodelet* node;
-
-  public:
-    TimerFunctor(unsigned int idx, CmdVelMuxNodelet* node) :
-        idx(idx), node(node)
-    {
-    }
-
-    void operator()(const ros::TimerEvent& event)
-    {
-      node->timerCallback(event, idx);
-    }
-  };
+  class TimerFunctor;
 };
 
 } // namespace cmd_vel_mux
