@@ -67,12 +67,12 @@ void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
 
 std::vector<std::shared_ptr<CmdVelSubscribers::CmdVelSub>>::size_type CmdVelSubscribers::size()
 {
-  return list.size();
+  return list_.size();
 }
 
 std::shared_ptr<CmdVelSubscribers::CmdVelSub>& CmdVelSubscribers::operator[](unsigned int idx)
 {
-  return list[idx];
+  return list_[idx];
 }
 
 void CmdVelSubscribers::configure(const YAML::Node& node)
@@ -89,10 +89,10 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
     {
       // Parse entries on YAML
       std::string new_subs_name = node[i]["name"].Scalar();
-      auto old_subs = std::find_if(list.begin(), list.end(),
+      auto old_subs = std::find_if(list_.begin(), list_.end(),
                                    [&new_subs_name](const std::shared_ptr<CmdVelSub>& subs)
                                                     {return subs->name_ == new_subs_name;});
-      if (old_subs != list.end())
+      if (old_subs != list_.end())
       {
         // For names already in the subscribers list, retain current object so we don't re-subscribe to the topic
         new_list[i] = *old_subs;
@@ -105,7 +105,7 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
       *new_list[i] << node[i];
     }
 
-    list = new_list;
+    list_ = new_list;
   }
   catch (const YAML::ParserException& e)
   {

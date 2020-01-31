@@ -90,10 +90,10 @@ public:
    */
   void configure(const YAML::Node& node);
 
-  unsigned int allowed;
+  unsigned int allowed_;
 
 private:
-  std::vector<std::shared_ptr<CmdVelSub>> list;
+  std::vector<std::shared_ptr<CmdVelSub>> list_;
 };
 
 } // namespace cmd_vel_mux

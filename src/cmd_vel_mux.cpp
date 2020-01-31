@@ -69,7 +69,7 @@ public:
 
 CmdVelMux::CmdVelMux()
 {
-  cmd_vel_subs.allowed = VACANT;
+  cmd_vel_subs.allowed_ = VACANT;
   dynamic_reconfigure_server = NULL;
 }
 
@@ -95,13 +95,13 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
 
   // Give permit to publish to this source if it's the only active or is
   // already allowed or has higher priority that the currently allowed
-  if ((cmd_vel_subs.allowed == VACANT) ||
-      (cmd_vel_subs.allowed == idx)    ||
-      (cmd_vel_subs[idx]->priority_ > cmd_vel_subs[cmd_vel_subs.allowed]->priority_))
+  if ((cmd_vel_subs.allowed_ == VACANT) ||
+      (cmd_vel_subs.allowed_ == idx)    ||
+      (cmd_vel_subs[idx]->priority_ > cmd_vel_subs[cmd_vel_subs.allowed_]->priority_))
   {
-    if (cmd_vel_subs.allowed != idx)
+    if (cmd_vel_subs.allowed_ != idx)
     {
-      cmd_vel_subs.allowed = idx;
+      cmd_vel_subs.allowed_ = idx;
 
       // Notify the world that a new cmd_vel source took the control
       std_msgs::StringPtr acv_msg(new std_msgs::String);
@@ -115,7 +115,7 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
 
 void CmdVelMux::timerCallback(const ros::TimerEvent& event, unsigned int idx)
 {
-  if (cmd_vel_subs.allowed == idx || (idx == GLOBAL_TIMER && cmd_vel_subs.allowed != VACANT))
+  if (cmd_vel_subs.allowed_ == idx || (idx == GLOBAL_TIMER && cmd_vel_subs.allowed_ != VACANT))
   {
     if (idx == GLOBAL_TIMER)
     {
@@ -123,11 +123,11 @@ void CmdVelMux::timerCallback(const ros::TimerEvent& event, unsigned int idx)
       // messages; not a big problem, just dislodge it; but possibly reflect a problem in the controller
       NODELET_WARN("CmdVelMux : No cmd_vel messages from ANY input received in the last %fs", common_timer_period);
       NODELET_WARN("CmdVelMux : %s dislodged due to general timeout",
-                   cmd_vel_subs[cmd_vel_subs.allowed]->name_.c_str());
+                   cmd_vel_subs[cmd_vel_subs.allowed_]->name_.c_str());
     }
 
     // No cmd_vel messages timeout happened to currently active source, so...
-    cmd_vel_subs.allowed = VACANT;
+    cmd_vel_subs.allowed_ = VACANT;
 
     // ...notify the world that nobody is publishing on cmd_vel; its vacant
     std_msgs::StringPtr acv_msg(new std_msgs::String);
