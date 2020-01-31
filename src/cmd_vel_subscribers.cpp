@@ -25,11 +25,11 @@ namespace yocs_cmd_vel_mux {
  ** Implementation
  *****************************************************************************/
 
-CmdVelSubscribers::CmdVelSubs::CmdVelSubs(unsigned int idx) : idx(idx), active(false)
+CmdVelSubscribers::CmdVelSub::CmdVelSub(unsigned int idx) : idx(idx), active(false)
 {
 }
 
-void CmdVelSubscribers::CmdVelSubs::operator << (const YAML::Node& node)
+void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
 {
   // Fill attributes with a YAML node content
   double new_timeout;
@@ -71,13 +71,13 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
       throw EmptyCfgException("Configuration is empty");
     }
 
-    std::vector<std::shared_ptr<CmdVelSubs>> new_list(node.size());
+    std::vector<std::shared_ptr<CmdVelSub>> new_list(node.size());
     for (unsigned int i = 0; i < node.size(); i++)
     {
       // Parse entries on YAML
       std::string new_subs_name = node[i]["name"].Scalar();
       auto old_subs = std::find_if(list.begin(), list.end(),
-                                   [&new_subs_name](const std::shared_ptr<CmdVelSubs>& subs)
+                                   [&new_subs_name](const std::shared_ptr<CmdVelSub>& subs)
                                                     {return subs->name == new_subs_name;});
       if (old_subs != list.end())
       {
@@ -86,7 +86,7 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
       }
       else
       {
-        new_list[i] = std::make_shared<CmdVelSubs>(i);
+        new_list[i] = std::make_shared<CmdVelSub>(i);
       }
       // update existing or new object with the new configuration
       *new_list[i] << node[i];

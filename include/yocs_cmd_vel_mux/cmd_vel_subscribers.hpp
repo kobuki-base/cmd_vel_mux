@@ -17,6 +17,10 @@
 ** Includes
 *****************************************************************************/
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 
@@ -54,7 +58,7 @@ public:
   /**
    * Inner class describing an individual subscriber to a cmd_vel topic
    */
-  class CmdVelSubs
+  class CmdVelSub
   {
   public:
     unsigned int           idx;          /**< Index; assigned according to the order on YAML file */
@@ -67,18 +71,15 @@ public:
     std::string            short_desc;   /**< Short description (optional) */
     bool                   active;       /**< Whether this source is active */
 
-    explicit CmdVelSubs(unsigned int idx);
-    ~CmdVelSubs() = default;
+    explicit CmdVelSub(unsigned int idx);
 
     /** Fill attributes with a YAML node content */
     void operator << (const YAML::Node& node);
   };
 
-  CmdVelSubscribers() { }
-  ~CmdVelSubscribers() { }
 
-  std::vector<std::shared_ptr<CmdVelSubs>>::size_type size() { return list.size(); };
-  std::shared_ptr<CmdVelSubs>& operator [] (unsigned int idx) { return list[idx]; };
+  std::vector<std::shared_ptr<CmdVelSub>>::size_type size() { return list.size(); };
+  std::shared_ptr<CmdVelSub>& operator [] (unsigned int idx) { return list[idx]; };
 
   /**
    * @brief Configures the subscribers from a yaml file.
@@ -93,7 +94,7 @@ public:
   unsigned int allowed;
 
 private:
-  std::vector<std::shared_ptr<CmdVelSubs>> list;
+  std::vector<std::shared_ptr<CmdVelSub>> list;
 };
 
 } // namespace yocs_cmd_vel_mux
