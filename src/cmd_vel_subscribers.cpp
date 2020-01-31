@@ -12,8 +12,8 @@
 
 #include <fstream>
 
-#include "yocs_cmd_vel_mux/cmd_vel_subscribers.hpp"
-#include "yocs_cmd_vel_mux/exceptions.hpp"
+#include "cmd_vel_mux/cmd_vel_subscribers.hpp"
+#include "cmd_vel_mux/exceptions.hpp"
 
 /*****************************************************************************
 ** Namespaces

@@ -14,8 +14,8 @@
 #include <std_msgs/String.h>
 #include <pluginlib/class_list_macros.h>
 
-#include "yocs_cmd_vel_mux/cmd_vel_mux_nodelet.hpp"
-#include "yocs_cmd_vel_mux/exceptions.hpp"
+#include "cmd_vel_mux/cmd_vel_mux_nodelet.hpp"
+#include "cmd_vel_mux/exceptions.hpp"
 
 /*****************************************************************************
 ** Namespaces

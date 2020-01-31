@@ -22,8 +22,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <geometry_msgs/Twist.h>
 
-#include "yocs_cmd_vel_mux/reloadConfig.h"
-#include "yocs_cmd_vel_mux/cmd_vel_subscribers.hpp"
+#include "cmd_vel_mux/reloadConfig.h"
+#include "cmd_vel_mux/cmd_vel_subscribers.hpp"
 
 /*****************************************************************************
 ** Namespaces

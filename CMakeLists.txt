@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(yocs_cmd_vel_mux)
+project(cmd_vel_mux)
 find_package(catkin REQUIRED COMPONENTS roscpp pluginlib nodelet dynamic_reconfigure geometry_msgs)
 
 # pkg-config support
