@@ -21,7 +21,8 @@
 ** Namespaces
 *****************************************************************************/
 
-namespace cmd_vel_mux {
+namespace cmd_vel_mux
+{
 
 /*********************
  ** Private Classes
@@ -135,7 +136,9 @@ void CmdVelMuxNodelet::timerCallback(const ros::TimerEvent& event, unsigned int 
   }
 
   if (idx != GLOBAL_TIMER)
+  {
     cmd_vel_subs[idx]->active = false;
+  }
 }
 
 void CmdVelMuxNodelet::onInit()
@@ -241,11 +244,11 @@ void CmdVelMuxNodelet::reloadConfiguration(cmd_vel_mux::reloadConfig &config, ui
   {
     cmd_vel_subs.configure(doc["subscribers"]);
   }
-  catch (EmptyCfgException& e)
+  catch (const EmptyCfgException& e)
   {
     NODELET_WARN_STREAM("CmdVelMux : yaml configured zero subscribers, check yaml content");
   }
-  catch (YamlException& e)
+  catch (const YamlException& e)
   {
     NODELET_ERROR_STREAM("CmdVelMux : yaml parsing problem [" << std::string(e.what()) << "]");
   }
@@ -275,7 +278,9 @@ void CmdVelMuxNodelet::reloadConfiguration(cmd_vel_mux::reloadConfig &config, ui
     }
 
     if (cmd_vel_subs[i]->timeout > longest_timeout)
+    {
       longest_timeout = cmd_vel_subs[i]->timeout;
+    }
   }
 
   if (!common_timer)
