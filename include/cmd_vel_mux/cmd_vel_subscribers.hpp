@@ -61,15 +61,15 @@ public:
   class CmdVelSub
   {
   public:
-    unsigned int           idx;          /**< Index; assigned according to the order on YAML file */
-    std::string            name;         /**< Descriptive name; must be unique to this subscriber */
-    std::string            topic;        /**< The name of the topic */
-    ros::Subscriber        subs;         /**< The subscriber itself */
-    ros::Timer             timer;        /**< No incoming messages timeout */
-    double                 timeout;      /**< Timer's timeout, in seconds  */
-    unsigned int           priority;     /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
-    std::string            short_desc;   /**< Short description (optional) */
-    bool                   active;       /**< Whether this source is active */
+    unsigned int           idx_;          /**< Index; assigned according to the order on YAML file */
+    std::string            name_;         /**< Descriptive name; must be unique to this subscriber */
+    std::string            topic_;        /**< The name of the topic */
+    ros::Subscriber        subs_;         /**< The subscriber itself */
+    ros::Timer             timer_;        /**< No incoming messages timeout */
+    double                 timeout_;      /**< Timer's timeout, in seconds  */
+    unsigned int           priority_;     /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
+    std::string            short_desc_;   /**< Short description (optional) */
+    bool                   active_;       /**< Whether this source is active */
 
     explicit CmdVelSub(unsigned int idx);
 

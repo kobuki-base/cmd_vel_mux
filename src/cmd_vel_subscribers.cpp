@@ -26,7 +26,7 @@ namespace cmd_vel_mux
  ** Implementation
  *****************************************************************************/
 
-CmdVelSubscribers::CmdVelSub::CmdVelSub(unsigned int idx) : idx(idx), active(false)
+CmdVelSubscribers::CmdVelSub::CmdVelSub(unsigned int idx) : idx_(idx), active_(false)
 {
 }
 
@@ -35,31 +35,31 @@ void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
   // Fill attributes with a YAML node content
   double new_timeout;
   std::string new_topic;
-  node["name"]     >> name;
+  node["name"]     >> name_;
   node["topic"]    >> new_topic;
   node["timeout"]  >> new_timeout;
-  node["priority"] >> priority;
+  node["priority"] >> priority_;
 #ifdef HAVE_NEW_YAMLCPP
   if (node["short_desc"]) {
 #else
   if (node.FindValue("short_desc") != NULL) {
 #endif
-    node["short_desc"] >> short_desc;
+    node["short_desc"] >> short_desc_;
   }
 
-  if (new_topic != topic)
+  if (new_topic != topic_)
   {
     // Shutdown the topic if the name has changed so it gets recreated on configuration reload
     // In the case of new subscribers, topic is empty and shutdown has just no effect
-    topic = new_topic;
-    subs.shutdown();
+    topic_ = new_topic;
+    subs_.shutdown();
   }
 
-  if (new_timeout != timeout)
+  if (new_timeout != timeout_)
   {
     // Change timer period if the timeout changed
-    timeout = new_timeout;
-    timer.setPeriod(ros::Duration(timeout));
+    timeout_ = new_timeout;
+    timer_.setPeriod(ros::Duration(timeout_));
   }
 }
 
@@ -79,7 +79,7 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
       std::string new_subs_name = node[i]["name"].Scalar();
       auto old_subs = std::find_if(list.begin(), list.end(),
                                    [&new_subs_name](const std::shared_ptr<CmdVelSub>& subs)
-                                                    {return subs->name == new_subs_name;});
+                                                    {return subs->name_ == new_subs_name;});
       if (old_subs != list.end())
       {
         // For names already in the subscribers list, retain current object so we don't re-subscribe to the topic
