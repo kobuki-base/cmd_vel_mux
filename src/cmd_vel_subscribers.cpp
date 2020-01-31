@@ -11,6 +11,8 @@
  *****************************************************************************/
 
 #include <fstream>
+#include <memory>
+#include <vector>
 
 #include "cmd_vel_mux/cmd_vel_subscribers.hpp"
 #include "cmd_vel_mux/exceptions.hpp"
@@ -61,6 +63,16 @@ void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
     timeout_ = new_timeout;
     timer_.setPeriod(ros::Duration(timeout_));
   }
+}
+
+std::vector<std::shared_ptr<CmdVelSubscribers::CmdVelSub>>::size_type CmdVelSubscribers::size()
+{
+  return list.size();
+}
+
+std::shared_ptr<CmdVelSubscribers::CmdVelSub>& CmdVelSubscribers::operator[](unsigned int idx)
+{
+  return list[idx];
 }
 
 void CmdVelSubscribers::configure(const YAML::Node& node)

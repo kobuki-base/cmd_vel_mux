@@ -78,8 +78,8 @@ public:
   };
 
 
-  std::vector<std::shared_ptr<CmdVelSub>>::size_type size() { return list.size(); };
-  std::shared_ptr<CmdVelSub>& operator [] (unsigned int idx) { return list[idx]; };
+  std::vector<std::shared_ptr<CmdVelSub>>::size_type size();
+  std::shared_ptr<CmdVelSub>& operator[](unsigned int idx);
 
   /**
    * @brief Configures the subscribers from a yaml file.
