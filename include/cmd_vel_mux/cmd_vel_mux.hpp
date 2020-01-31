@@ -49,12 +49,12 @@ private:
   static const unsigned int VACANT       = 666666;  /**< ID for "nobody" active input; anything big is ok */
   static const unsigned int GLOBAL_TIMER = 888888;  /**< ID for the global timer functor; anything big is ok */
 
-  CmdVelSubscribers cmd_vel_subs;    /**< Pool of cmd_vel topics subscribers */
-  ros::Publisher output_topic_pub;   /**< Multiplexed command velocity topic */
-  std::string    output_topic_name;  /**< Multiplexed command velocity topic name */
-  ros::Publisher active_subscriber;  /**< Currently allowed cmd_vel subscriber */
-  ros::Timer common_timer;           /**< No messages from any subscriber timeout */
-  double common_timer_period;        /**< No messages from any subscriber timeout period */
+  CmdVelSubscribers cmd_vel_subs_;    /**< Pool of cmd_vel topics subscribers */
+  ros::Publisher output_topic_pub_;   /**< Multiplexed command velocity topic */
+  std::string    output_topic_name_;  /**< Multiplexed command velocity topic name */
+  ros::Publisher active_subscriber_;  /**< Currently allowed cmd_vel subscriber */
+  ros::Timer common_timer_;           /**< No messages from any subscriber timeout */
+  double common_timer_period_;        /**< No messages from any subscriber timeout period */
 
   void timerCallback(const ros::TimerEvent& event, unsigned int idx);
   void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsigned int idx);
@@ -62,8 +62,8 @@ private:
   /*********************
   ** Dynamic Reconfigure
   **********************/
-  dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig> * dynamic_reconfigure_server;
-  dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig>::CallbackType dynamic_reconfigure_cb;
+  dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig> * dynamic_reconfigure_server_;
+  dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig>::CallbackType dynamic_reconfigure_cb_;
   void reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t unused_level);
 
   /*********************

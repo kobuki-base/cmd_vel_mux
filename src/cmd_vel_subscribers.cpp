@@ -44,7 +44,7 @@ void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
 #ifdef HAVE_NEW_YAMLCPP
   if (node["short_desc"]) {
 #else
-  if (node.FindValue("short_desc") != NULL) {
+  if (node.FindValue("short_desc") != nullptr) {
 #endif
     node["short_desc"] >> short_desc_;
   }
