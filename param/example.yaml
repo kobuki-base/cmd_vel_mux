@@ -39,4 +39,3 @@ subscribers:
     topic:       "input/keyop"
     timeout:     0.1
     priority:    7
-publisher:       "output/cmd_vel"

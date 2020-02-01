@@ -67,10 +67,12 @@ public:
  ** Implementation
  *****************************************************************************/
 
-CmdVelMux::CmdVelMux()
+CmdVelMux::CmdVelMux() : dynamic_reconfigure_server_(nullptr)
 {
   cmd_vel_subs_.allowed_ = VACANT;
-  dynamic_reconfigure_server_ = nullptr;
+
+  ros::NodeHandle &pnh = this->getPrivateNodeHandle();
+  output_topic_pub_ = pnh.advertise<geometry_msgs::Twist>("cmd_vel", 10);
 }
 
 CmdVelMux::~CmdVelMux()
@@ -201,34 +203,6 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
   YAML::Parser parser(*is);
   parser.GetNextDocument(doc);
 #endif
-
-  /*********************
-  ** Output Publisher
-  **********************/
-  std::string output_name("output");
-#ifdef HAVE_NEW_YAMLCPP
-  if (doc["publisher"])
-  {
-    doc["publisher"] >> output_name;
-  }
-#else
-  const YAML::Node *node = doc.FindValue("publisher");
-  if (node != nullptr)
-  {
-    *node >> output_name;
-  }
-#endif
-
-  if (output_topic_name_ != output_name)
-  {
-    output_topic_name_ = output_name;
-    output_topic_pub_ = pnh.advertise<geometry_msgs::Twist>(output_topic_name_, 10);
-    NODELET_DEBUG_STREAM("CmdVelMux : subscribe to output topic '" << output_name << "'");
-  }
-  else
-  {
-    NODELET_DEBUG_STREAM("CmdVelMux : no need to re-subscribe to output topic '" << output_name << "'");
-  }
 
   /*********************
   ** Input Subscribers

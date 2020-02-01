@@ -51,7 +51,6 @@ private:
 
   CmdVelSubscribers cmd_vel_subs_;    /**< Pool of cmd_vel topics subscribers */
   ros::Publisher output_topic_pub_;   /**< Multiplexed command velocity topic */
-  std::string    output_topic_name_;  /**< Multiplexed command velocity topic name */
   ros::Publisher active_subscriber_;  /**< Currently allowed cmd_vel subscriber */
   ros::Timer common_timer_;           /**< No messages from any subscriber timeout */
   double common_timer_period_;        /**< No messages from any subscriber timeout period */
