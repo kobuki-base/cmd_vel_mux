@@ -68,7 +68,7 @@ public:
     unsigned int           idx_;          /**< Index; assigned according to the order on YAML file */
     std::string            name_;         /**< Descriptive name; must be unique to this subscriber */
     std::string            topic_;        /**< The name of the topic */
-    ros::Subscriber        subs_;         /**< The subscriber itself */
+    ros::Subscriber        sub_;         /**< The subscriber itself */
     ros::Timer             timer_;        /**< No incoming messages timeout */
     double                 timeout_;      /**< Timer's timeout, in seconds  */
 

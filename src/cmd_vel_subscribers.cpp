@@ -54,7 +54,7 @@ void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
     // Shutdown the topic if the name has changed so it gets recreated on configuration reload
     // In the case of new subscribers, topic is empty and shutdown has just no effect
     topic_ = new_topic;
-    subs_.shutdown();
+    sub_.shutdown();
   }
 
   if (new_timeout != timeout_)
@@ -93,14 +93,14 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
     for (unsigned int i = 0; i < node.size(); i++)
     {
       // Parse entries on YAML
-      std::string new_subs_name = node[i]["name"].Scalar();
-      auto old_subs = std::find_if(list_.begin(), list_.end(),
-                                   [&new_subs_name](const std::shared_ptr<CmdVelSub>& subs)
-                                                    {return subs->name_ == new_subs_name;});
-      if (old_subs != list_.end())
+      std::string new_sub_name = node[i]["name"].Scalar();
+      auto old_sub = std::find_if(list_.begin(), list_.end(),
+                                  [&new_sub_name](const std::shared_ptr<CmdVelSub>& sub)
+                                                  {return sub->name_ == new_sub_name;});
+      if (old_sub != list_.end())
       {
         // For names already in the subscribers list, retain current object so we don't re-subscribe to the topic
-        new_list[i] = *old_subs;
+        new_list[i] = *old_sub;
       }
       else
       {

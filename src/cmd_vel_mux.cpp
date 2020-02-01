@@ -228,9 +228,9 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
   double longest_timeout = 0.0;
   for (unsigned int i = 0; i < cmd_vel_subs_.size(); i++)
   {
-    if (!cmd_vel_subs_[i]->subs_)
+    if (!cmd_vel_subs_[i]->sub_)
     {
-      cmd_vel_subs_[i]->subs_ =
+      cmd_vel_subs_[i]->sub_ =
           pnh.subscribe<geometry_msgs::Twist>(cmd_vel_subs_[i]->topic_, 10, CmdVelFunctor(i, this));
       NODELET_DEBUG("CmdVelMux : subscribed to '%s' on topic '%s'. pr: %d, to: %.2f",
                     cmd_vel_subs_[i]->name_.c_str(), cmd_vel_subs_[i]->topic_.c_str(),
