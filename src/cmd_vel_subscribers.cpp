@@ -28,7 +28,7 @@ namespace cmd_vel_mux
  ** Implementation
  *****************************************************************************/
 
-CmdVelSubscribers::CmdVelSub::CmdVelSub(unsigned int idx) : idx_(idx), active_(false)
+CmdVelSubscribers::CmdVelSub::CmdVelSub(unsigned int idx) : idx_(idx)
 {
 }
 

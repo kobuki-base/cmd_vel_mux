@@ -71,7 +71,6 @@ public:
     ros::Subscriber        subs_;         /**< The subscriber itself */
     ros::Timer             timer_;        /**< No incoming messages timeout */
     double                 timeout_;      /**< Timer's timeout, in seconds  */
-    bool                   active_;       /**< Whether this source is active */
 
     /** Fill attributes with a YAML node content */
     void operator << (const YAML::Node& node);

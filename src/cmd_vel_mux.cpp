@@ -91,8 +91,6 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
   cmd_vel_subs_[idx]->timer_.stop();
   cmd_vel_subs_[idx]->timer_.start();
 
-  cmd_vel_subs_[idx]->active_ = true;   // obviously his source is sending commands, so active
-
   // Give permit to publish to this source if it's the only active or is
   // already allowed or has higher priority that the currently allowed
   if ((cmd_vel_subs_.allowed_ == VACANT) ||
@@ -133,11 +131,6 @@ void CmdVelMux::timerCallback(const ros::TimerEvent& event, unsigned int idx)
     std_msgs::StringPtr acv_msg(new std_msgs::String);
     acv_msg->data = "idle";
     active_subscriber_.publish(acv_msg);
-  }
-
-  if (idx != GLOBAL_TIMER)
-  {
-    cmd_vel_subs_[idx]->active_ = false;
   }
 }
 
