@@ -61,11 +61,8 @@ public:
   class CmdVelSub final
   {
   public:
-    explicit CmdVelSub(unsigned int idx);
-
     unsigned int getPriority() const;
 
-    unsigned int           idx_;          /**< Index; assigned according to the order on YAML file */
     std::string            name_;         /**< Descriptive name; must be unique to this subscriber */
     std::string            topic_;        /**< The name of the topic */
     ros::Subscriber        sub_;         /**< The subscriber itself */

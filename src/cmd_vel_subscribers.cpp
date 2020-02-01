@@ -28,10 +28,6 @@ namespace cmd_vel_mux
  ** Implementation
  *****************************************************************************/
 
-CmdVelSubscribers::CmdVelSub::CmdVelSub(unsigned int idx) : idx_(idx)
-{
-}
-
 void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
 {
   // Fill attributes with a YAML node content
@@ -104,7 +100,7 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
       }
       else
       {
-        new_list[i] = std::make_shared<CmdVelSub>(i);
+        new_list[i] = std::make_shared<CmdVelSub>();
       }
       // update existing or new object with the new configuration
       *new_list[i] << node[i];
