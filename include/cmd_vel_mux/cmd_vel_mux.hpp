@@ -63,7 +63,7 @@ private:
   **********************/
   dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig> * dynamic_reconfigure_server_;
   dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig>::CallbackType dynamic_reconfigure_cb_;
-  void reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t unused_level);
+  void reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t level);
 
   /*********************
    ** Private Classes

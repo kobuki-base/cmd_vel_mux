@@ -115,6 +115,8 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
 
 void CmdVelMux::timerCallback(const ros::TimerEvent& event, unsigned int idx)
 {
+  (void)event;
+
   if (cmd_vel_subs_.allowed_ == idx || (idx == GLOBAL_TIMER && cmd_vel_subs_.allowed_ != VACANT))
   {
     if (idx == GLOBAL_TIMER)
@@ -158,8 +160,10 @@ void CmdVelMux::onInit()
   NODELET_DEBUG("CmdVelMux : successfully initialized");
 }
 
-void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t unused_level)
+void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t level)
 {
+  (void)level;
+
   ros::NodeHandle &pnh = this->getPrivateNodeHandle();
 
   std::unique_ptr<std::istream> is;
@@ -270,4 +274,4 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
 
 } // namespace cmd_vel_mux
 
-PLUGINLIB_EXPORT_CLASS(cmd_vel_mux::CmdVelMux, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(cmd_vel_mux::CmdVelMux, nodelet::Nodelet)
