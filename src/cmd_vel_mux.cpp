@@ -70,7 +70,7 @@ public:
 
 CmdVelMux::CmdVelMux() : dynamic_reconfigure_server_(nullptr)
 {
-  cmd_vel_subs_.allowed_ = VACANT;
+  allowed_ = VACANT;
 
   ros::NodeHandle &pnh = this->getPrivateNodeHandle();
   output_topic_pub_ = pnh.advertise<geometry_msgs::Twist>("cmd_vel", 10);
@@ -96,13 +96,13 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
 
   // Give permit to publish to this source if it's the only active or is
   // already allowed or has higher priority that the currently allowed
-  if ((cmd_vel_subs_.allowed_ == VACANT) ||
-      (cmd_vel_subs_.allowed_ == idx)    ||
-      (cmd_vel_subs_[idx]->getPriority() > cmd_vel_subs_[cmd_vel_subs_.allowed_]->getPriority()))
+  if ((allowed_ == VACANT) ||
+      (allowed_ == idx)    ||
+      (cmd_vel_subs_[idx]->getPriority() > cmd_vel_subs_[allowed_]->getPriority()))
   {
-    if (cmd_vel_subs_.allowed_ != idx)
+    if (allowed_ != idx)
     {
-      cmd_vel_subs_.allowed_ = idx;
+      allowed_ = idx;
 
       // Notify the world that a new cmd_vel source took the control
       std_msgs::StringPtr acv_msg(new std_msgs::String);
@@ -118,16 +118,16 @@ void CmdVelMux::commonTimerCallback(const ros::TimerEvent& event)
 {
   (void)event;
 
-  if (cmd_vel_subs_.allowed_ != VACANT)
+  if (allowed_ != VACANT)
   {
     // No cmd_vel messages timeout happened for ANYONE, so last active source got stuck without further
     // messages; not a big problem, just dislodge it; but possibly reflect a problem in the controller
     NODELET_WARN("CmdVelMux : No cmd_vel messages from ANY input received in the last %fs", common_timer_period_);
     NODELET_WARN("CmdVelMux : %s dislodged due to general timeout",
-                 cmd_vel_subs_[cmd_vel_subs_.allowed_]->name_.c_str());
+                 cmd_vel_subs_[allowed_]->name_.c_str());
 
     // No cmd_vel messages timeout happened to currently active source, so...
-    cmd_vel_subs_.allowed_ = VACANT;
+    allowed_ = VACANT;
 
     // ...notify the world that nobody is publishing on cmd_vel; its vacant
     std_msgs::StringPtr acv_msg(new std_msgs::String);
@@ -138,10 +138,10 @@ void CmdVelMux::commonTimerCallback(const ros::TimerEvent& event)
 
 void CmdVelMux::timerCallback(unsigned int idx)
 {
-  if (cmd_vel_subs_.allowed_ == idx)
+  if (allowed_ == idx)
   {
     // No cmd_vel messages timeout happened to currently active source, so...
-    cmd_vel_subs_.allowed_ = VACANT;
+    allowed_ = VACANT;
 
     // ...notify the world that nobody is publishing on cmd_vel; its vacant
     std_msgs::StringPtr acv_msg(new std_msgs::String);

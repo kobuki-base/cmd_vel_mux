@@ -58,6 +58,8 @@ private:
   void timerCallback(unsigned int idx);
   void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsigned int idx);
 
+  unsigned int allowed_;
+
   /*********************
   ** Dynamic Reconfigure
   **********************/
