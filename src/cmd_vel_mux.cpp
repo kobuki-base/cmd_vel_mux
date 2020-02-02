@@ -59,7 +59,8 @@ public:
 
   void operator()(const ros::TimerEvent& event)
   {
-    node->timerCallback(event, idx);
+    (void)event;
+    node->timerCallback(idx);
   }
 };
 
@@ -113,21 +114,32 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
   }
 }
 
-void CmdVelMux::timerCallback(const ros::TimerEvent& event, unsigned int idx)
+void CmdVelMux::commonTimerCallback(const ros::TimerEvent& event)
 {
   (void)event;
 
-  if (cmd_vel_subs_.allowed_ == idx || (idx == GLOBAL_TIMER && cmd_vel_subs_.allowed_ != VACANT))
+  if (cmd_vel_subs_.allowed_ != VACANT)
   {
-    if (idx == GLOBAL_TIMER)
-    {
-      // No cmd_vel messages timeout happened for ANYONE, so last active source got stuck without further
-      // messages; not a big problem, just dislodge it; but possibly reflect a problem in the controller
-      NODELET_WARN("CmdVelMux : No cmd_vel messages from ANY input received in the last %fs", common_timer_period_);
-      NODELET_WARN("CmdVelMux : %s dislodged due to general timeout",
-                   cmd_vel_subs_[cmd_vel_subs_.allowed_]->name_.c_str());
-    }
+    // No cmd_vel messages timeout happened for ANYONE, so last active source got stuck without further
+    // messages; not a big problem, just dislodge it; but possibly reflect a problem in the controller
+    NODELET_WARN("CmdVelMux : No cmd_vel messages from ANY input received in the last %fs", common_timer_period_);
+    NODELET_WARN("CmdVelMux : %s dislodged due to general timeout",
+                 cmd_vel_subs_[cmd_vel_subs_.allowed_]->name_.c_str());
 
+    // No cmd_vel messages timeout happened to currently active source, so...
+    cmd_vel_subs_.allowed_ = VACANT;
+
+    // ...notify the world that nobody is publishing on cmd_vel; its vacant
+    std_msgs::StringPtr acv_msg(new std_msgs::String);
+    acv_msg->data = "idle";
+    active_subscriber_.publish(acv_msg);
+  }
+}
+
+void CmdVelMux::timerCallback(unsigned int idx)
+{
+  if (cmd_vel_subs_.allowed_ == idx)
+  {
     // No cmd_vel messages timeout happened to currently active source, so...
     cmd_vel_subs_.allowed_ = VACANT;
 
@@ -260,7 +272,7 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
     // dislodge last active source if it gets stuck without further messages
     common_timer_period_ = longest_timeout * 2.0;
     common_timer_ =
-        pnh.createTimer(ros::Duration(common_timer_period_), TimerFunctor(GLOBAL_TIMER, this), true, false);
+      pnh.createTimer(ros::Duration(common_timer_period_), &CmdVelMux::commonTimerCallback, this, true, false);
   }
   else if (longest_timeout != (common_timer_period_ / 2.0))
   {

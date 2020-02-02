@@ -47,7 +47,6 @@ public:
 
 private:
   static const unsigned int VACANT       = 666666;  /**< ID for "nobody" active input; anything big is ok */
-  static const unsigned int GLOBAL_TIMER = 888888;  /**< ID for the global timer functor; anything big is ok */
 
   CmdVelSubscribers cmd_vel_subs_;    /**< Pool of cmd_vel topics subscribers */
   ros::Publisher output_topic_pub_;   /**< Multiplexed command velocity topic */
@@ -55,7 +54,8 @@ private:
   ros::Timer common_timer_;           /**< No messages from any subscriber timeout */
   double common_timer_period_;        /**< No messages from any subscriber timeout period */
 
-  void timerCallback(const ros::TimerEvent& event, unsigned int idx);
+  void commonTimerCallback(const ros::TimerEvent& event);
+  void timerCallback(unsigned int idx);
   void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsigned int idx);
 
   /*********************
