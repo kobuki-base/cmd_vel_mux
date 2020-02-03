@@ -8,8 +8,8 @@ pkg_search_module(yaml-cpp REQUIRED yaml-cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Wpedantic")
 
-if(NOT ${yaml-cpp_VERSION} VERSION_LESS "0.5")
-add_definitions(-DHAVE_NEW_YAMLCPP)
+if(${yaml-cpp_VERSION} VERSION_LESS "0.5")
+  message(FATAL_ERROR "Only yaml-cpp >= 0.5 supported")
 endif()
 
 # Dynamic reconfigure support

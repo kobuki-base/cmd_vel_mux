@@ -215,12 +215,7 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
 
   // probably need to bring the try catches back here
   YAML::Node doc;
-#ifdef HAVE_NEW_YAMLCPP
   doc = YAML::Load(*is);
-#else
-  YAML::Parser parser(*is);
-  parser.GetNextDocument(doc);
-#endif
 
   /*********************
   ** Input Subscribers
@@ -321,11 +316,7 @@ void CmdVelMux::configure(const YAML::Node& node)
       new_topic = node["topic"].as<std::string>();
       new_timeout = node["timeout"].as<double>();
       new_list[i]->priority_ = node["priority"].as<unsigned int>();
-#ifdef HAVE_NEW_YAMLCPP
       if (node["short_desc"]) {
-#else
-      if (node.FindValue("short_desc") != nullptr) {
-#endif
         new_list[i]->short_desc_ = node["short_desc"].as<std::string>();
       }
 
