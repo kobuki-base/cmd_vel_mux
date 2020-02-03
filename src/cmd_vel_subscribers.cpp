@@ -28,39 +28,6 @@ namespace cmd_vel_mux
  ** Implementation
  *****************************************************************************/
 
-void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
-{
-  // Fill attributes with a YAML node content
-  double new_timeout;
-  std::string new_topic;
-  node["name"]     >> name_;
-  node["topic"]    >> new_topic;
-  node["timeout"]  >> new_timeout;
-  node["priority"] >> priority_;
-#ifdef HAVE_NEW_YAMLCPP
-  if (node["short_desc"]) {
-#else
-  if (node.FindValue("short_desc") != nullptr) {
-#endif
-    node["short_desc"] >> short_desc_;
-  }
-
-  if (new_topic != topic_)
-  {
-    // Shutdown the topic if the name has changed so it gets recreated on configuration reload
-    // In the case of new subscribers, topic is empty and shutdown has just no effect
-    topic_ = new_topic;
-    sub_.shutdown();
-  }
-
-  if (new_timeout != timeout_)
-  {
-    // Change timer period if the timeout changed
-    timeout_ = new_timeout;
-    timer_.setPeriod(ros::Duration(timeout_));
-  }
-}
-
 void CmdVelSubscribers::configure(const YAML::Node& node)
 {
   try
@@ -88,7 +55,38 @@ void CmdVelSubscribers::configure(const YAML::Node& node)
         new_list[i] = std::make_shared<CmdVelSub>();
       }
       // update existing or new object with the new configuration
-      *new_list[i] << node[i];
+      //*new_list[i] << node[i];
+      //new_list[i]->configure();
+
+      // Fill attributes with a YAML node content
+      double new_timeout;
+      std::string new_topic;
+      node["name"]     >> new_list[i]->name_;
+      node["topic"]    >> new_topic;
+      node["timeout"]  >> new_timeout;
+      node["priority"] >> new_list[i]->priority_;
+#ifdef HAVE_NEW_YAMLCPP
+      if (node["short_desc"]) {
+#else
+      if (node.FindValue("short_desc") != nullptr) {
+#endif
+          node["short_desc"] >> new_list[i]->short_desc_;
+      }
+
+      if (new_topic != new_list[i]->topic_)
+      {
+        // Shutdown the topic if the name has changed so it gets recreated on configuration reload
+        // In the case of new subscribers, topic is empty and shutdown has just no effect
+        new_list[i]->topic_ = new_topic;
+        new_list[i]->sub_.shutdown();
+      }
+
+      if (new_timeout != new_list[i]->timeout_)
+      {
+        // Change timer period if the timeout changed
+        new_list[i]->timeout_ = new_timeout;
+        new_list[i]->timer_.setPeriod(ros::Duration(new_list[i]->timeout_));
+      }
     }
 
     list_ = new_list;
