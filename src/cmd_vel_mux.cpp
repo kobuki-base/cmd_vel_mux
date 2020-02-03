@@ -23,16 +23,6 @@
 ** Namespaces
 *****************************************************************************/
 
-#ifdef HAVE_NEW_YAMLCPP
-// The >> operator disappeared in yaml-cpp 0.5, so this function is
-// added to provide support for code written under the yaml-cpp 0.3 API.
-template<typename T>
-void operator >> (const YAML::Node& node, T& i)
-{
-  i = node.as<T>();
-}
-#endif
-
 namespace cmd_vel_mux
 {
 
@@ -327,16 +317,16 @@ void CmdVelMux::configure(const YAML::Node& node)
       // Fill attributes with a YAML node content
       double new_timeout;
       std::string new_topic;
-      node["name"]     >> new_list[i]->name_;
-      node["topic"]    >> new_topic;
-      node["timeout"]  >> new_timeout;
-      node["priority"] >> new_list[i]->priority_;
+      new_list[i]->name_ = node["name"].as<std::string>();
+      new_topic = node["topic"].as<std::string>();
+      new_timeout = node["timeout"].as<double>();
+      new_list[i]->priority_ = node["priority"].as<unsigned int>();
 #ifdef HAVE_NEW_YAMLCPP
       if (node["short_desc"]) {
 #else
       if (node.FindValue("short_desc") != nullptr) {
 #endif
-          node["short_desc"] >> new_list[i]->short_desc_;
+        new_list[i]->short_desc_ = node["short_desc"].as<std::string>();
       }
 
       if (new_topic != new_list[i]->topic_)
