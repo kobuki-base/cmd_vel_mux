@@ -66,16 +66,6 @@ unsigned int CmdVelSubscribers::CmdVelSub::getPriority() const
   return priority_;
 }
 
-std::vector<std::shared_ptr<CmdVelSubscribers::CmdVelSub>>::size_type CmdVelSubscribers::size()
-{
-  return list_.size();
-}
-
-std::shared_ptr<CmdVelSubscribers::CmdVelSub>& CmdVelSubscribers::operator[](unsigned int idx)
-{
-  return list_[idx];
-}
-
 void CmdVelSubscribers::configure(const YAML::Node& node)
 {
   try

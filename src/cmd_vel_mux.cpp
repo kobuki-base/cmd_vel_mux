@@ -91,14 +91,14 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
   common_timer_.start();
 
   // Reset timer for this source
-  cmd_vel_subs_[idx]->timer_.stop();
-  cmd_vel_subs_[idx]->timer_.start();
+  cmd_vel_subs_.list_[idx]->timer_.stop();
+  cmd_vel_subs_.list_[idx]->timer_.start();
 
   // Give permit to publish to this source if it's the only active or is
   // already allowed or has higher priority that the currently allowed
   if ((allowed_ == VACANT) ||
       (allowed_ == idx)    ||
-      (cmd_vel_subs_[idx]->getPriority() > cmd_vel_subs_[allowed_]->getPriority()))
+      (cmd_vel_subs_.list_[idx]->getPriority() > cmd_vel_subs_.list_[allowed_]->getPriority()))
   {
     if (allowed_ != idx)
     {
@@ -106,7 +106,7 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
 
       // Notify the world that a new cmd_vel source took the control
       std_msgs::StringPtr acv_msg(new std_msgs::String);
-      acv_msg->data = cmd_vel_subs_[idx]->name_;
+      acv_msg->data = cmd_vel_subs_.list_[idx]->name_;
       active_subscriber_.publish(acv_msg);
     }
 
@@ -124,7 +124,7 @@ void CmdVelMux::commonTimerCallback(const ros::TimerEvent& event)
     // messages; not a big problem, just dislodge it; but possibly reflect a problem in the controller
     NODELET_WARN("CmdVelMux : No cmd_vel messages from ANY input received in the last %fs", common_timer_period_);
     NODELET_WARN("CmdVelMux : %s dislodged due to general timeout",
-                 cmd_vel_subs_[allowed_]->name_.c_str());
+                 cmd_vel_subs_.list_[allowed_]->name_.c_str());
 
     // No cmd_vel messages timeout happened to currently active source, so...
     allowed_ = VACANT;
@@ -238,31 +238,31 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
 
   // (Re)create subscribers whose topic is invalid: new ones and those with changed names
   double longest_timeout = 0.0;
-  for (unsigned int i = 0; i < cmd_vel_subs_.size(); i++)
+  for (size_t i = 0; i < cmd_vel_subs_.list_.size(); i++)
   {
-    if (!cmd_vel_subs_[i]->sub_)
+    if (!cmd_vel_subs_.list_[i]->sub_)
     {
-      cmd_vel_subs_[i]->sub_ =
-          pnh.subscribe<geometry_msgs::Twist>(cmd_vel_subs_[i]->topic_, 10, CmdVelFunctor(i, this));
+      cmd_vel_subs_.list_[i]->sub_ =
+          pnh.subscribe<geometry_msgs::Twist>(cmd_vel_subs_.list_[i]->topic_, 10, CmdVelFunctor(i, this));
       NODELET_DEBUG("CmdVelMux : subscribed to '%s' on topic '%s'. pr: %d, to: %.2f",
-                    cmd_vel_subs_[i]->name_.c_str(), cmd_vel_subs_[i]->topic_.c_str(),
-                    cmd_vel_subs_[i]->getPriority(), cmd_vel_subs_[i]->timeout_);
+                    cmd_vel_subs_.list_[i]->name_.c_str(), cmd_vel_subs_.list_[i]->topic_.c_str(),
+                    cmd_vel_subs_.list_[i]->getPriority(), cmd_vel_subs_.list_[i]->timeout_);
     }
     else
     {
-      NODELET_DEBUG_STREAM("CmdVelMux : no need to re-subscribe to input topic '" << cmd_vel_subs_[i]->topic_ << "'");
+      NODELET_DEBUG_STREAM("CmdVelMux : no need to re-subscribe to input topic '" << cmd_vel_subs_.list_[i]->topic_ << "'");
     }
 
-    if (!cmd_vel_subs_[i]->timer_)
+    if (!cmd_vel_subs_.list_[i]->timer_)
     {
       // Create (stopped by now) a one-shot timer for every subscriber, if it doesn't exist yet
-      cmd_vel_subs_[i]->timer_ =
-          pnh.createTimer(ros::Duration(cmd_vel_subs_[i]->timeout_), TimerFunctor(i, this), true, false);
+      cmd_vel_subs_.list_[i]->timer_ =
+          pnh.createTimer(ros::Duration(cmd_vel_subs_.list_[i]->timeout_), TimerFunctor(i, this), true, false);
     }
 
-    if (cmd_vel_subs_[i]->timeout_ > longest_timeout)
+    if (cmd_vel_subs_.list_[i]->timeout_ > longest_timeout)
     {
-      longest_timeout = cmd_vel_subs_[i]->timeout_;
+      longest_timeout = cmd_vel_subs_.list_[i]->timeout_;
     }
   }
 

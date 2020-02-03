@@ -78,9 +78,6 @@ public:
   };
 
 
-  std::vector<std::shared_ptr<CmdVelSub>>::size_type size();
-  std::shared_ptr<CmdVelSub>& operator[](unsigned int idx);
-
   /**
    * @brief Configures the subscribers from a yaml file.
    *
@@ -90,7 +87,6 @@ public:
    */
   void configure(const YAML::Node& node);
 
-private:
   std::vector<std::shared_ptr<CmdVelSub>> list_;
 };
 
