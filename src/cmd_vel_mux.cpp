@@ -11,6 +11,10 @@
  *****************************************************************************/
 
 #include <fstream>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <std_msgs/String.h>
 #include <pluginlib/class_list_macros.h>
 
