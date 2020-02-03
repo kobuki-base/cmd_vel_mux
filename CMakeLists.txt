@@ -1,48 +1,57 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(cmd_vel_mux)
-find_package(catkin REQUIRED COMPONENTS roscpp pluginlib nodelet dynamic_reconfigure geometry_msgs)
 
-# pkg-config support
-find_package(PkgConfig)
-pkg_search_module(yaml-cpp REQUIRED yaml-cpp)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Wpedantic")
-
-if(${yaml-cpp_VERSION} VERSION_LESS "0.5")
-  message(FATAL_ERROR "Only yaml-cpp >= 0.5 supported")
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
 endif()
 
-# Dynamic reconfigure support
-generate_dynamic_reconfigure_options(cfg/reload.cfg)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-catkin_package(
-   INCLUDE_DIRS include
-   LIBRARIES ${PROJECT_NAME}_nodelet
-   CATKIN_DEPENDS roscpp pluginlib nodelet dynamic_reconfigure geometry_msgs
-   DEPENDS yaml-cpp
-)
+find_package(ament_cmake_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(rcl_interfaces REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(std_msgs REQUIRED)
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${yaml-cpp_INCLUDE_DIRS})
+include_directories(include)
 
 # Nodelet library
-add_library(${PROJECT_NAME}_nodelet src/cmd_vel_mux.cpp)
-add_dependencies(${PROJECT_NAME}_nodelet geometry_msgs_gencpp)
-add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_gencfg)
+add_library(${PROJECT_NAME} SHARED src/cmd_vel_mux.cpp)
+ament_target_dependencies(${PROJECT_NAME}
+  geometry_msgs
+  rcl_interfaces
+  rclcpp
+  rclcpp_components
+  std_msgs
+)
 
-target_link_libraries(${PROJECT_NAME}_nodelet ${catkin_LIBRARIES} ${yaml-cpp_LIBRARIES})
+add_executable(cmd_vel_mux_node src/cmd_vel_mux_node.cpp)
+ament_target_dependencies(cmd_vel_mux_node
+  rclcpp
+)
+target_link_libraries(cmd_vel_mux_node cmd_vel_mux)
 
-install(TARGETS ${PROJECT_NAME}_nodelet
-        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+rclcpp_components_register_nodes(${PROJECT_NAME}
+  "cmd_vel_mux::CmdVelMux")
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 install(DIRECTORY include/${PROJECT_NAME}/
-        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  DESTINATION include/${PROJECT_NAME}
 )
-install(DIRECTORY plugins
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(TARGETS cmd_vel_mux_node
+  DESTINATION lib/${PROJECT_NAME}
 )
-install(DIRECTORY launch
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+
+install(DIRECTORY config launch
+  DESTINATION share/${PROJECT_NAME}
 )
-install(DIRECTORY param
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+
+ament_package()
