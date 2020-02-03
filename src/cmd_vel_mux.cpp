@@ -14,12 +14,24 @@
 #include <std_msgs/String.h>
 #include <pluginlib/class_list_macros.h>
 
+#include <yaml-cpp/yaml.h>
+
 #include "cmd_vel_mux/cmd_vel_mux.hpp"
 #include "cmd_vel_mux/exceptions.hpp"
 
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
+
+#ifdef HAVE_NEW_YAMLCPP
+// The >> operator disappeared in yaml-cpp 0.5, so this function is
+// added to provide support for code written under the yaml-cpp 0.3 API.
+template<typename T>
+void operator >> (const YAML::Node& node, T& i)
+{
+  i = node.as<T>();
+}
+#endif
 
 namespace cmd_vel_mux
 {
@@ -91,14 +103,14 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
   common_timer_.start();
 
   // Reset timer for this source
-  cmd_vel_subs_.list_[idx]->timer_.stop();
-  cmd_vel_subs_.list_[idx]->timer_.start();
+  list_[idx]->timer_.stop();
+  list_[idx]->timer_.start();
 
   // Give permit to publish to this source if it's the only active or is
   // already allowed or has higher priority that the currently allowed
   if ((allowed_ == VACANT) ||
       (allowed_ == idx)    ||
-      (cmd_vel_subs_.list_[idx]->priority_ > cmd_vel_subs_.list_[allowed_]->priority_))
+      (list_[idx]->priority_ > list_[allowed_]->priority_))
   {
     if (allowed_ != idx)
     {
@@ -106,7 +118,7 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
 
       // Notify the world that a new cmd_vel source took the control
       std_msgs::StringPtr acv_msg(new std_msgs::String);
-      acv_msg->data = cmd_vel_subs_.list_[idx]->name_;
+      acv_msg->data = list_[idx]->name_;
       active_subscriber_.publish(acv_msg);
     }
 
@@ -124,7 +136,7 @@ void CmdVelMux::commonTimerCallback(const ros::TimerEvent& event)
     // messages; not a big problem, just dislodge it; but possibly reflect a problem in the controller
     NODELET_WARN("CmdVelMux : No cmd_vel messages from ANY input received in the last %fs", common_timer_period_);
     NODELET_WARN("CmdVelMux : %s dislodged due to general timeout",
-                 cmd_vel_subs_.list_[allowed_]->name_.c_str());
+                 list_[allowed_]->name_.c_str());
 
     // No cmd_vel messages timeout happened to currently active source, so...
     allowed_ = VACANT;
@@ -225,7 +237,7 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
   **********************/
   try
   {
-    cmd_vel_subs_.configure(doc["subscribers"]);
+    configure(doc["subscribers"]);
   }
   catch (const EmptyCfgException& e)
   {
@@ -238,31 +250,31 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
 
   // (Re)create subscribers whose topic is invalid: new ones and those with changed names
   double longest_timeout = 0.0;
-  for (size_t i = 0; i < cmd_vel_subs_.list_.size(); i++)
+  for (size_t i = 0; i < list_.size(); i++)
   {
-    if (!cmd_vel_subs_.list_[i]->sub_)
+    if (!list_[i]->sub_)
     {
-      cmd_vel_subs_.list_[i]->sub_ =
-          pnh.subscribe<geometry_msgs::Twist>(cmd_vel_subs_.list_[i]->topic_, 10, CmdVelFunctor(i, this));
+      list_[i]->sub_ =
+          pnh.subscribe<geometry_msgs::Twist>(list_[i]->topic_, 10, CmdVelFunctor(i, this));
       NODELET_DEBUG("CmdVelMux : subscribed to '%s' on topic '%s'. pr: %d, to: %.2f",
-                    cmd_vel_subs_.list_[i]->name_.c_str(), cmd_vel_subs_.list_[i]->topic_.c_str(),
-                    cmd_vel_subs_.list_[i]->priority_, cmd_vel_subs_.list_[i]->timeout_);
+                    list_[i]->name_.c_str(), list_[i]->topic_.c_str(),
+                    list_[i]->priority_, list_[i]->timeout_);
     }
     else
     {
-      NODELET_DEBUG_STREAM("CmdVelMux : no need to re-subscribe to input topic '" << cmd_vel_subs_.list_[i]->topic_ << "'");
+      NODELET_DEBUG_STREAM("CmdVelMux : no need to re-subscribe to input topic '" << list_[i]->topic_ << "'");
     }
 
-    if (!cmd_vel_subs_.list_[i]->timer_)
+    if (!list_[i]->timer_)
     {
       // Create (stopped by now) a one-shot timer for every subscriber, if it doesn't exist yet
-      cmd_vel_subs_.list_[i]->timer_ =
-          pnh.createTimer(ros::Duration(cmd_vel_subs_.list_[i]->timeout_), TimerFunctor(i, this), true, false);
+      list_[i]->timer_ =
+          pnh.createTimer(ros::Duration(list_[i]->timeout_), TimerFunctor(i, this), true, false);
     }
 
-    if (cmd_vel_subs_.list_[i]->timeout_ > longest_timeout)
+    if (list_[i]->timeout_ > longest_timeout)
     {
-      longest_timeout = cmd_vel_subs_.list_[i]->timeout_;
+      longest_timeout = list_[i]->timeout_;
     }
   }
 
@@ -282,6 +294,77 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
   }
 
   NODELET_INFO_STREAM("CmdVelMux : (re)configured");
+}
+
+void CmdVelMux::configure(const YAML::Node& node)
+{
+  try
+  {
+    if (node.size() == 0)
+    {
+      throw EmptyCfgException("Configuration is empty");
+    }
+
+    std::vector<std::shared_ptr<CmdVelSub>> new_list(node.size());
+    for (unsigned int i = 0; i < node.size(); i++)
+    {
+      // Parse entries on YAML
+      std::string new_sub_name = node[i]["name"].Scalar();
+      auto old_sub = std::find_if(list_.begin(), list_.end(),
+                                  [&new_sub_name](const std::shared_ptr<CmdVelSub>& sub)
+                                                  {return sub->name_ == new_sub_name;});
+      if (old_sub != list_.end())
+      {
+        // For names already in the subscribers list, retain current object so we don't re-subscribe to the topic
+        new_list[i] = *old_sub;
+      }
+      else
+      {
+        new_list[i] = std::make_shared<CmdVelSub>();
+      }
+      // update existing or new object with the new configuration
+
+      // Fill attributes with a YAML node content
+      double new_timeout;
+      std::string new_topic;
+      node["name"]     >> new_list[i]->name_;
+      node["topic"]    >> new_topic;
+      node["timeout"]  >> new_timeout;
+      node["priority"] >> new_list[i]->priority_;
+#ifdef HAVE_NEW_YAMLCPP
+      if (node["short_desc"]) {
+#else
+      if (node.FindValue("short_desc") != nullptr) {
+#endif
+          node["short_desc"] >> new_list[i]->short_desc_;
+      }
+
+      if (new_topic != new_list[i]->topic_)
+      {
+        // Shutdown the topic if the name has changed so it gets recreated on configuration reload
+        // In the case of new subscribers, topic is empty and shutdown has just no effect
+        new_list[i]->topic_ = new_topic;
+        new_list[i]->sub_.shutdown();
+      }
+
+      if (new_timeout != new_list[i]->timeout_)
+      {
+        // Change timer period if the timeout changed
+        new_list[i]->timeout_ = new_timeout;
+        new_list[i]->timer_.setPeriod(ros::Duration(new_list[i]->timeout_));
+      }
+    }
+
+    list_ = new_list;
+  }
+  catch (const YAML::ParserException& e)
+  {
+    throw YamlException(e.what());
+  }
+  catch (const YAML::RepresentationException& e)
+  {
+    throw YamlException(e.what());
+  }
 }
 
 } // namespace cmd_vel_mux

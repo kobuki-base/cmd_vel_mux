@@ -25,7 +25,7 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} ${yaml-cpp_INCLUDE_DIRS})
 
 # Nodelet library
-add_library(${PROJECT_NAME}_nodelet src/cmd_vel_mux.cpp src/cmd_vel_subscribers.cpp)
+add_library(${PROJECT_NAME}_nodelet src/cmd_vel_mux.cpp)
 add_dependencies(${PROJECT_NAME}_nodelet geometry_msgs_gencpp)
 add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_gencfg)
 

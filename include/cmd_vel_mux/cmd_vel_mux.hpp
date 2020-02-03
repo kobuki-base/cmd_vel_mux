@@ -23,7 +23,6 @@
 #include <geometry_msgs/Twist.h>
 
 #include "cmd_vel_mux/reloadConfig.h"
-#include "cmd_vel_mux/cmd_vel_subscribers.hpp"
 
 /*****************************************************************************
 ** Namespaces
@@ -48,7 +47,6 @@ public:
 private:
   static const unsigned int VACANT       = 666666;  /**< ID for "nobody" active input; anything big is ok */
 
-  CmdVelSubscribers cmd_vel_subs_;    /**< Pool of cmd_vel topics subscribers */
   ros::Publisher output_topic_pub_;   /**< Multiplexed command velocity topic */
   ros::Publisher active_subscriber_;  /**< Currently allowed cmd_vel subscriber */
   ros::Timer common_timer_;           /**< No messages from any subscriber timeout */
@@ -76,6 +74,31 @@ private:
 
   // Functor assigned to each velocity messages source to bind it to timer callback
   class TimerFunctor;
+
+  /**
+   * Inner class describing an individual subscriber to a cmd_vel topic
+   */
+  struct CmdVelSub final
+  {
+    std::string            name_;         /**< Descriptive name; must be unique to this subscriber */
+    std::string            topic_;        /**< The name of the topic */
+    ros::Subscriber        sub_;         /**< The subscriber itself */
+    ros::Timer             timer_;        /**< No incoming messages timeout */
+    double                 timeout_;      /**< Timer's timeout, in seconds  */
+    unsigned int           priority_;     /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
+    std::string            short_desc_;   /**< Short description (optional) */
+  };
+
+  /**
+   * @brief Configures the subscribers from a yaml file.
+   *
+   * @exception YamlException : problem parsing the yaml
+   * @exception EmptyCfgException : empty configuration file
+   * @param node : node holding all the subscriber configuration
+   */
+  void configure(const YAML::Node& node);
+
+  std::vector<std::shared_ptr<CmdVelSub>> list_;
 };
 
 } // namespace cmd_vel_mux
