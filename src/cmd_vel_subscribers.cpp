@@ -61,11 +61,6 @@ void CmdVelSubscribers::CmdVelSub::operator << (const YAML::Node& node)
   }
 }
 
-unsigned int CmdVelSubscribers::CmdVelSub::getPriority() const
-{
-  return priority_;
-}
-
 void CmdVelSubscribers::configure(const YAML::Node& node)
 {
   try

@@ -98,7 +98,7 @@ void CmdVelMux::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg, unsign
   // already allowed or has higher priority that the currently allowed
   if ((allowed_ == VACANT) ||
       (allowed_ == idx)    ||
-      (cmd_vel_subs_.list_[idx]->getPriority() > cmd_vel_subs_.list_[allowed_]->getPriority()))
+      (cmd_vel_subs_.list_[idx]->priority_ > cmd_vel_subs_.list_[allowed_]->priority_))
   {
     if (allowed_ != idx)
     {
@@ -246,7 +246,7 @@ void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t 
           pnh.subscribe<geometry_msgs::Twist>(cmd_vel_subs_.list_[i]->topic_, 10, CmdVelFunctor(i, this));
       NODELET_DEBUG("CmdVelMux : subscribed to '%s' on topic '%s'. pr: %d, to: %.2f",
                     cmd_vel_subs_.list_[i]->name_.c_str(), cmd_vel_subs_.list_[i]->topic_.c_str(),
-                    cmd_vel_subs_.list_[i]->getPriority(), cmd_vel_subs_.list_[i]->timeout_);
+                    cmd_vel_subs_.list_[i]->priority_, cmd_vel_subs_.list_[i]->timeout_);
     }
     else
     {

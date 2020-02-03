@@ -61,19 +61,17 @@ public:
   class CmdVelSub final
   {
   public:
-    unsigned int getPriority() const;
-
     std::string            name_;         /**< Descriptive name; must be unique to this subscriber */
     std::string            topic_;        /**< The name of the topic */
     ros::Subscriber        sub_;         /**< The subscriber itself */
     ros::Timer             timer_;        /**< No incoming messages timeout */
     double                 timeout_;      /**< Timer's timeout, in seconds  */
+    unsigned int           priority_;     /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
 
     /** Fill attributes with a YAML node content */
     void operator << (const YAML::Node& node);
 
   private:
-    unsigned int           priority_;     /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
     std::string            short_desc_;   /**< Short description (optional) */
   };
 
