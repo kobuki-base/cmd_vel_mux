@@ -164,7 +164,7 @@ void CmdVelMux::onInit()
   ** Dynamic Reconfigure
   **********************/
   dynamic_reconfigure_cb_ = boost::bind(&CmdVelMux::reloadConfiguration, this, _1, _2);
-  dynamic_reconfigure_server_ = new dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig>(nh);
+  dynamic_reconfigure_server_ = new dynamic_reconfigure::Server<reloadConfig>(nh);
   dynamic_reconfigure_server_->setCallback(dynamic_reconfigure_cb_);
 
   active_subscriber_ = nh.advertise <std_msgs::String> ("active", 1, true); // latched topic
@@ -178,7 +178,7 @@ void CmdVelMux::onInit()
   NODELET_DEBUG("CmdVelMux : successfully initialized");
 }
 
-void CmdVelMux::reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t level)
+void CmdVelMux::reloadConfiguration(reloadConfig &config, uint32_t level)
 {
   (void)level;
 

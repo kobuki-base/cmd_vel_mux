@@ -17,6 +17,10 @@
  ** Includes
  *****************************************************************************/
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <ros/ros.h>
 #include <nodelet/nodelet.h>
 #include <dynamic_reconfigure/server.h>
@@ -61,9 +65,9 @@ private:
   /*********************
   ** Dynamic Reconfigure
   **********************/
-  dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig> * dynamic_reconfigure_server_;
-  dynamic_reconfigure::Server<cmd_vel_mux::reloadConfig>::CallbackType dynamic_reconfigure_cb_;
-  void reloadConfiguration(cmd_vel_mux::reloadConfig &config, uint32_t level);
+  dynamic_reconfigure::Server<reloadConfig> * dynamic_reconfigure_server_;
+  dynamic_reconfigure::Server<reloadConfig>::CallbackType dynamic_reconfigure_cb_;
+  void reloadConfiguration(reloadConfig &config, uint32_t level);
 
   /*********************
    ** Private Classes
