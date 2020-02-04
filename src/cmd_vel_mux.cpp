@@ -146,7 +146,7 @@ void CmdVelMux::configureFromParameters(const std::vector<std::string> & names, 
     if (!list_[i]->timer_)
     {
       // Create (stopped by now) a one-shot timer for every subscriber, if it doesn't exist yet
-      list_[i]->timer_ = this->create_wall_timer(std::chrono::milliseconds(rclcpp::Duration(list_[i]->timeout_).nanoseconds() / 1000 / 1000), [this, i]() {timerCallback(i);});
+      list_[i]->timer_ = this->create_wall_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(list_[i]->timeout_)), [this, i]() {timerCallback(i);});
     }
 
     if (list_[i]->timeout_ > longest_timeout)
@@ -160,7 +160,7 @@ void CmdVelMux::configureFromParameters(const std::vector<std::string> & names, 
     // Create another timer for cmd_vel messages from any source, so we can
     // dislodge last active source if it gets stuck without further messages
     common_timer_period_ = longest_timeout * 2.0;
-    common_timer_ = this->create_wall_timer(std::chrono::milliseconds(rclcpp::Duration(common_timer_period_).nanoseconds() / 1000 / 1000), std::bind(&CmdVelMux::commonTimerCallback, this));
+    common_timer_ = this->create_wall_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(common_timer_period_)), std::bind(&CmdVelMux::commonTimerCallback, this));
   }
 
   RCLCPP_INFO(get_logger(), "CmdVelMux : (re)configured");
