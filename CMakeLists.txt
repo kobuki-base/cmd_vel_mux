@@ -15,6 +15,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(rcpputils REQUIRED)
 find_package(std_msgs REQUIRED)
 
 include_directories(include)
@@ -26,6 +27,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rcl_interfaces
   rclcpp
   rclcpp_components
+  rcpputils
   std_msgs
 )
 

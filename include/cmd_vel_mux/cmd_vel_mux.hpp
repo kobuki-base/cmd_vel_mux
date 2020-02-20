@@ -17,6 +17,7 @@
  ** Includes
  *****************************************************************************/
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -37,6 +38,35 @@ namespace cmd_vel_mux
  ** CmdVelMux
  *****************************************************************************/
 
+struct ParameterValues
+{
+  std::string topic;       /**< The name of the topic */
+  double timeout{-1.0};    /**< Timer's timeout, in seconds  */
+  int64_t priority{-1};    /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
+  std::string short_desc;  /**< Short description */
+};
+
+bool operator == (const ParameterValues & parameters1, const ParameterValues & parameters2)
+{
+  if (parameters1.topic != parameters2.topic)
+  {
+    return false;
+  }
+  else if (parameters1.timeout != parameters2.timeout)
+  {
+    return false;
+  }
+  else if (parameters1.priority != parameters2.priority)
+  {
+    return false;
+  }
+  else if (parameters1.short_desc != parameters2.short_desc)
+  {
+    return false;
+  }
+  return true;
+}
+
 class CmdVelMux final : public rclcpp::Node
 {
 public:
@@ -48,23 +78,19 @@ public:
   CmdVelMux & operator=(const CmdVelMux & c) = delete;
 
 private:
-  static const unsigned int VACANT       = 666666;  /**< ID for "nobody" active input; anything big is ok */
+  static const std::string VACANT;  /**< ID for "nobody" active input;*/
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr output_topic_pub_;   /**< Multiplexed command velocity topic */
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr active_subscriber_pub_;  /**< Currently allowed cmd_vel subscriber */
-  rclcpp::TimerBase::SharedPtr common_timer_;           /**< No messages from any subscriber timeout */
-  double common_timer_period_;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_cb_;
 
-  unsigned int allowed_;
+  std::string allowed_;
 
-  void commonTimerCallback();
-  void timerCallback(unsigned int idx);
-  void cmdVelCallback(const std::shared_ptr<geometry_msgs::msg::Twist> msg, unsigned int idx);
+  void timerCallback(const std::string & key);
+  void cmdVelCallback(const std::shared_ptr<geometry_msgs::msg::Twist> msg, const std::string & key);
 
-  void configureFromParameters(const std::vector<std::string> & names, const std::vector<std::string> & topics, const std::vector<double> & timeouts, const std::vector<int64_t> & priorities, const std::vector<std::string> & short_descs);
   rcl_interfaces::msg::SetParametersResult parameterUpdate(
-    const std::vector<rclcpp::Parameter> & parameters);
+    const std::vector<rclcpp::Parameter> & update_parameters);
 
   /*********************
    ** Private Classes
@@ -76,15 +102,17 @@ private:
   struct CmdVelSub final
   {
     std::string            name_;         /**< Descriptive name; must be unique to this subscriber */
-    std::string            topic_;        /**< The name of the topic */
+    ParameterValues        values_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr        sub_;         /**< The subscriber itself */
     rclcpp::TimerBase::SharedPtr             timer_;        /**< No incoming messages timeout */
-    double                 timeout_;      /**< Timer's timeout, in seconds  */
-    unsigned int           priority_;     /**< UNIQUE integer from 0 (lowest priority) to MAX_INT */
-    std::string            short_desc_;   /**< Short description (optional) */
   };
 
-  std::vector<std::shared_ptr<CmdVelSub>> list_;
+  bool addInputToParameterMap(std::map<std::string, ParameterValues> & parsed_parameters, const std::string & input_name, const std::string & parameter_name, const rclcpp::Parameter & parameter_value);
+  bool parametersAreValid(const std::map<std::string, ParameterValues> & parameters) const;
+  void configureFromParameters(const std::map<std::string, ParameterValues> & parameters);
+  std::map<std::string, ParameterValues> parseFromParametersMap(const std::map<std::string, rclcpp::Parameter> & parameters);
+
+  std::map<std::string, std::shared_ptr<CmdVelSub>> map_;
 };
 
 } // namespace cmd_vel_mux

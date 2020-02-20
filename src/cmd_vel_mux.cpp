@@ -10,16 +10,23 @@
  ** Includes
  *****************************************************************************/
 
+#include <chrono>
 #include <fstream>
 #include <functional>
+#include <limits>
+#include <map>
 #include <memory>
+#include <set>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <geometry_msgs/msg/twist.hpp>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <rcpputils/split.hpp>
 #include <std_msgs/msg/string.hpp>
 
 #include "cmd_vel_mux/cmd_vel_mux.hpp"
@@ -30,37 +37,34 @@
 
 namespace cmd_vel_mux
 {
+
 /*****************************************************************************
  ** Implementation
  *****************************************************************************/
+const std::string CmdVelMux::VACANT = "empty";
 
 CmdVelMux::CmdVelMux(rclcpp::NodeOptions options) : rclcpp::Node("cmd_vel_mux", options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true)), allowed_(VACANT)
 {
-  std::vector<std::string> names;
-  if (!get_parameter("subscribers.name", names))
+  std::map<std::string, rclcpp::Parameter> parameters;
+  // Check if there are loaded parameters from config file besides sim_time_used
+  if (!get_parameters("subscribers", parameters) || parameters.size() < 1)
   {
     RCLCPP_WARN(get_logger(), "No subscribers configured!");
   }
-
-  std::vector<std::string> topics;
-  get_parameter("subscribers.topic", topics);
-
-  std::vector<double> timeouts;
-  get_parameter("subscribers.timeout", timeouts);
-
-  std::vector<int64_t> priorities;
-  get_parameter("subscribers.priority", priorities);
-
-  std::vector<std::string> short_descs;
-  get_parameter("subscribers.short_desc", short_descs);
-
-  if (names.size() != topics.size() || names.size() != timeouts.size() ||
-      names.size() != priorities.size() || names.size() != short_descs.size())
+  else
   {
-    throw std::runtime_error("Number of names, topics, timeouts, priorities, and short_descs must be the same");
+    std::map<std::string, ParameterValues> parsed_parameters = parseFromParametersMap(parameters);
+    if (parsed_parameters.size() == 0)
+    {
+      // We ran into some kind of error while configuring, quit
+      throw std::runtime_error("Invalid parameters");
+    }
+    if (!parametersAreValid(parsed_parameters))
+    {
+      throw std::runtime_error("Incomplete parameters");
+    }
+    configureFromParameters(parsed_parameters);
   }
-
-  configureFromParameters(names, topics, timeouts, priorities, short_descs);
 
   param_cb_ =
     add_on_set_parameters_callback(std::bind(&CmdVelMux::parameterUpdate, this,
@@ -79,114 +83,260 @@ CmdVelMux::CmdVelMux(rclcpp::NodeOptions options) : rclcpp::Node("cmd_vel_mux", 
   RCLCPP_DEBUG(get_logger(), "CmdVelMux : successfully initialized");
 }
 
-void CmdVelMux::configureFromParameters(const std::vector<std::string> & names, const std::vector<std::string> & topics, const std::vector<double> & timeouts, const std::vector<int64_t> & priorities, const std::vector<std::string> & short_descs)
+bool CmdVelMux::parametersAreValid(const std::map<std::string, ParameterValues> & parameters) const
 {
-  std::vector<std::shared_ptr<CmdVelSub>> new_list(names.size());
-  for (unsigned int i = 0; i < names.size(); i++)
+  std::set<int64_t> used_priorities;
+
+  for (const std::pair<std::string, ParameterValues> & parameter : parameters)
   {
-    // Parse entries on YAML
-    std::string new_sub_name = names[i];
-    auto old_sub = std::find_if(list_.begin(), list_.end(),
-                                [&new_sub_name](const std::shared_ptr<CmdVelSub>& sub)
-                                                {return sub->name_ == new_sub_name;});
-    if (old_sub != list_.end())
+    if (parameter.second.topic.empty())
     {
-      // For names already in the subscribers list, retain current object so we don't re-subscribe to the topic
-      new_list[i] = *old_sub;
+      RCLCPP_WARN(get_logger(), "Empty topic for '%s'", parameter.first.c_str());
+      return false;
+    }
+    if (parameter.second.timeout < 0.0)
+    {
+      RCLCPP_WARN(get_logger(), "Missing timeout for '%s', ignoring", parameter.first.c_str());
+      return false;
+    }
+    if (parameter.second.priority < 0)
+    {
+      RCLCPP_WARN(get_logger(), "Missing priority for '%s', ignoring", parameter.first.c_str());
+      return false;
+    }
+    if (parameter.second.short_desc.empty())
+    {
+      RCLCPP_WARN(get_logger(), "Empty short_desc for '%s', ignoring", parameter.first.c_str());
+      return false;
+    }
+
+    if (used_priorities.count(parameter.second.priority) != 0)
+    {
+      RCLCPP_WARN(get_logger(), "Cannot have duplicate priorities, ignoring");
+      return false;
+    }
+    used_priorities.insert(parameter.second.priority);
+  }
+
+  return true;
+}
+
+void CmdVelMux::configureFromParameters(const std::map<std::string, ParameterValues> & parameters)
+{
+  std::map<std::string, std::shared_ptr<CmdVelSub>> new_map;
+
+  for (const std::pair<std::string, ParameterValues> & parameter : parameters)
+  {
+    const std::string & key = parameter.first;
+    const ParameterValues & parameter_values = parameter.second;
+    // Check if parameter subscriber has all its necessary values
+    if (map_.count(key) != 0)
+    {
+      // For names already in the subscribers map, retain current object so we don't re-subscribe to the topic
+      new_map[key] = map_[key];
     }
     else
     {
-      new_list[i] = std::make_shared<CmdVelSub>();
+      new_map[key] = std::make_shared<CmdVelSub>();
     }
+
     // update existing or new object with the new configuration
 
-    // Fill attributes with a YAML node content
-    double new_timeout;
-    std::string new_topic;
-    new_list[i]->name_ = names[i];
-    new_topic = topics[i];
-    new_timeout = timeouts[i];
-    new_list[i]->priority_ = priorities[i];
-    new_list[i]->short_desc_ = short_descs[i];
+    new_map[key]->name_ = key;
+    new_map[key]->values_.priority = parameter_values.priority;
+    new_map[key]->values_.short_desc = parameter_values.short_desc;
 
-    if (new_topic != new_list[i]->topic_)
+    if (parameter_values.topic != new_map[key]->values_.topic)
     {
       // Shutdown the topic if the name has changed so it gets recreated on configuration reload
       // In the case of new subscribers, topic is empty and shutdown has just no effect
-      new_list[i]->topic_ = new_topic;
-      new_list[i]->sub_ = nullptr;
+      new_map[key]->values_.topic = parameter_values.topic;
+      new_map[key]->sub_ = nullptr;
     }
 
-    if (new_timeout != new_list[i]->timeout_)
+    if (parameter_values.timeout != new_map[key]->values_.timeout)
     {
       // Change timer period if the timeout changed
-      new_list[i]->timeout_ = new_timeout;
-      new_list[i]->timer_ = nullptr;
+      new_map[key]->values_.timeout = parameter_values.timeout;
+      new_map[key]->timer_ = nullptr;
     }
   }
 
-  list_ = new_list;
+  // Take down the deleted subscriber if it was the one being used as source
+  if (allowed_ != VACANT && new_map.count(allowed_) == 0)
+  {
+    allowed_ = VACANT;
+    // ...notify the world that nobody is publishing on cmd_vel; its vacant
+    auto active_msg = std::make_unique<std_msgs::msg::String>();
+    active_msg->data = "idle";
+    active_subscriber_pub_->publish(std::move(active_msg));
+  }
+
+  map_ = new_map;
 
   // (Re)create subscribers whose topic is invalid: new ones and those with changed names
-  double longest_timeout = 0.0;
-  for (size_t i = 0; i < list_.size(); i++)
+  for (std::pair<const std::string, std::shared_ptr<CmdVelSub>> & m : map_)
   {
-    if (!list_[i]->sub_)
+    const std::string & key = m.first;
+    const std::shared_ptr<CmdVelSub> & values = m.second;
+    if (!values->sub_)
     {
-      list_[i]->sub_ = this->create_subscription<geometry_msgs::msg::Twist>(list_[i]->topic_, 10, [this, i](const geometry_msgs::msg::Twist::SharedPtr msg){cmdVelCallback(msg, i);});
+      values->sub_ = this->create_subscription<geometry_msgs::msg::Twist>(values->values_.topic, 10, [this, key](const geometry_msgs::msg::Twist::SharedPtr msg){cmdVelCallback(msg, key);});
       RCLCPP_DEBUG(get_logger(), "CmdVelMux : subscribed to '%s' on topic '%s'. pr: %d, to: %.2f",
-                   list_[i]->name_.c_str(), list_[i]->topic_.c_str(),
-                   list_[i]->priority_, list_[i]->timeout_);
+                   values->name_.c_str(), values->values_.topic.c_str(),
+                   values->values_.priority, values->values_.timeout);
     }
     else
     {
-      RCLCPP_DEBUG(get_logger(), "CmdVelMux : no need to re-subscribe to input topic '%s'", list_[i]->topic_.c_str());
+      RCLCPP_DEBUG(get_logger(), "CmdVelMux : no need to re-subscribe to input topic '%s'", values->values_.topic.c_str());
     }
 
-    if (!list_[i]->timer_)
+    if (!values->timer_)
     {
       // Create (stopped by now) a one-shot timer for every subscriber, if it doesn't exist yet
-      list_[i]->timer_ = this->create_wall_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(list_[i]->timeout_)), [this, i]() {timerCallback(i);});
+      values->timer_ = this->create_wall_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(values->values_.timeout)), [this, key]() {timerCallback(key);});
     }
-
-    if (list_[i]->timeout_ > longest_timeout)
-    {
-      longest_timeout = list_[i]->timeout_;
-    }
-  }
-
-  if (!common_timer_ || longest_timeout != (common_timer_period_ / 2.0))
-  {
-    // Create another timer for cmd_vel messages from any source, so we can
-    // dislodge last active source if it gets stuck without further messages
-    common_timer_period_ = longest_timeout * 2.0;
-    common_timer_ = this->create_wall_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(common_timer_period_)), std::bind(&CmdVelMux::commonTimerCallback, this));
   }
 
   RCLCPP_INFO(get_logger(), "CmdVelMux : (re)configured");
 }
 
-void CmdVelMux::cmdVelCallback(const std::shared_ptr<geometry_msgs::msg::Twist> msg, unsigned int idx)
+bool CmdVelMux::addInputToParameterMap(std::map<std::string, ParameterValues> & parsed_parameters, const std::string & input_name, const std::string & parameter_name, const rclcpp::Parameter & parameter_value)
 {
-  // Reset general timer
-  common_timer_->reset();
+  if (parsed_parameters.count(input_name) == 0)
+  {
+    parsed_parameters.emplace(std::make_pair(input_name, ParameterValues()));
+  }
+
+  if (parameter_name == "topic")
+  {
+    if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET)
+    {
+      parsed_parameters[input_name].topic.clear();
+    }
+    else if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_STRING)
+    {
+      parsed_parameters[input_name].topic = parameter_value.as_string();
+    }
+    else
+    {
+      RCLCPP_WARN(get_logger(), "topic must be a string; ignoring");
+      return false;
+    }
+  }
+  else if (parameter_name == "timeout")
+  {
+    if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET)
+    {
+      parsed_parameters[input_name].timeout = -1.0;
+    }
+    else if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_DOUBLE)
+    {
+      parsed_parameters[input_name].timeout = parameter_value.as_double();
+    }
+    else
+    {
+      RCLCPP_WARN(get_logger(), "timeout must be a double; ignoring");
+      return false;
+    }
+  }
+  else if (parameter_name == "priority")
+  {
+    if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET)
+    {
+      parsed_parameters[input_name].priority = -1;
+    }
+    else if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+    {
+      int64_t priority = parameter_value.as_int();
+      if (priority < 0 || priority > std::numeric_limits<uint32_t>::max())
+      {
+         RCLCPP_WARN(get_logger(), "Priority out of range, must be between 0 and MAX_UINT32");
+         return false;
+      }
+      parsed_parameters[input_name].priority = priority;
+    }
+    else
+    {
+      RCLCPP_WARN(get_logger(), "priority must be an integer; ignoring");
+      return false;
+    }
+  }
+  else if (parameter_name == "short_desc")
+  {
+    if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET)
+    {
+      parsed_parameters[input_name].short_desc.clear();
+    }
+    else if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_STRING)
+    {
+      parsed_parameters[input_name].short_desc = parameter_value.as_string();
+    }
+    else
+    {
+      RCLCPP_WARN(get_logger(), "short_desc must be a string; ignoring");
+      return false;
+    }
+  }
+  else
+  {
+    RCLCPP_WARN(get_logger(), "Invalid input variable '%s'; ignored", parameter_name.c_str());
+    return false;
+  }
+
+  return true;
+}
+
+std::map<std::string, ParameterValues> CmdVelMux::parseFromParametersMap(const std::map<std::string, rclcpp::Parameter> & parameters)
+{
+  std::map<std::string, ParameterValues> parsed_parameters;
+  // Iterate over all parameters and parse their content
+  for (const std::pair<std::string, rclcpp::Parameter> & parameter : parameters)
+  {
+    std::vector<std::string> splits = rcpputils::split(parameter.first, '.');
+    if (splits.size() != 2)
+    {
+      RCLCPP_WARN(get_logger(), "Invalid or unknown parameter '%s', ignoring", parameter.first.c_str());
+      continue;
+    }
+
+    const std::string & input_name = splits[0];
+    const std::string & parameter_name = splits[1];
+    const rclcpp::Parameter & parameter_value = parameter.second;
+    if (!addInputToParameterMap(parsed_parameters, input_name, parameter_name, parameter_value))
+    {
+      parsed_parameters.clear();
+      break;
+    }
+  }
+
+  return parsed_parameters;
+}
+
+void CmdVelMux::cmdVelCallback(const std::shared_ptr<geometry_msgs::msg::Twist> msg, const std::string & key)
+{
+  // if subscriber was deleted or the one being called right now just ignore
+  if (map_.count(key) == 0)
+  {
+    return;
+  }
 
   // Reset timer for this source
-  list_[idx]->timer_->reset();
+  map_[key]->timer_->reset();
 
   // Give permit to publish to this source if it's the only active or is
   // already allowed or has higher priority that the currently allowed
   if ((allowed_ == VACANT) ||
-      (allowed_ == idx)    ||
-      (list_[idx]->priority_ > list_[allowed_]->priority_))
+      (allowed_ == key)    ||
+      (map_[key]->values_.priority > map_[allowed_]->values_.priority))
   {
-    if (allowed_ != idx)
+    if (allowed_ != key)
     {
-      allowed_ = idx;
+      allowed_ = key;
 
       // Notify the world that a new cmd_vel source took the control
       auto active_msg = std::make_unique<std_msgs::msg::String>();
-      active_msg->data = list_[idx]->name_;
+      active_msg->data = map_[key]->name_;
       active_subscriber_pub_->publish(std::move(active_msg));
     }
 
@@ -194,29 +344,12 @@ void CmdVelMux::cmdVelCallback(const std::shared_ptr<geometry_msgs::msg::Twist> 
   }
 }
 
-void CmdVelMux::commonTimerCallback()
+// The per-topic timerCallback is continually reset as cmd_vel messages are
+// received.  Thus, if it ever expires, then the topic hasn't published within
+// the specified timeout period and it should be removed.
+void CmdVelMux::timerCallback(const std::string & key)
 {
-  if (allowed_ != VACANT)
-  {
-    // No cmd_vel messages timeout happened for ANYONE, so last active source got stuck without further
-    // messages; not a big problem, just dislodge it; but possibly reflect a problem in the controller
-    RCLCPP_WARN(get_logger(), "CmdVelMux : No cmd_vel messages from ANY input received in the last %fs", common_timer_period_);
-    RCLCPP_WARN(get_logger(), "CmdVelMux : %s dislodged due to general timeout",
-                list_[allowed_]->name_.c_str());
-
-    // No cmd_vel messages timeout happened to currently active source, so...
-    allowed_ = VACANT;
-
-    // ...notify the world that nobody is publishing on cmd_vel; its vacant
-    auto active_msg = std::make_unique<std_msgs::msg::String>();
-    active_msg->data = "idle";
-    active_subscriber_pub_->publish(std::move(active_msg));
-  }
-}
-
-void CmdVelMux::timerCallback(unsigned int idx)
-{
-  if (allowed_ == idx)
+  if (allowed_ == key)
   {
     // No cmd_vel messages timeout happened to currently active source, so...
     allowed_ = VACANT;
@@ -229,92 +362,68 @@ void CmdVelMux::timerCallback(unsigned int idx)
 }
 
 rcl_interfaces::msg::SetParametersResult CmdVelMux::parameterUpdate(
-  const std::vector<rclcpp::Parameter> & parameters)
+  const std::vector<rclcpp::Parameter> & update_parameters)
 {
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
 
-  std::vector<std::string> names;
-  std::vector<std::string> topics;
-  std::vector<double> timeouts;
-  std::vector<int64_t> priorities;
-  std::vector<std::string> short_descs;
-
-  for (const rclcpp::Parameter & parameter : parameters)
+  std::map<std::string, rclcpp::Parameter> old_parameters;
+  if (!get_parameters("subscribers", old_parameters) || old_parameters.size() <= 1)
   {
-    if (parameter.get_name() == "subscribers.name")
-    {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_STRING_ARRAY)
-      {
-        result.successful = false;
-        result.reason = "subscribers.name must be a list of strings";
-        break;
-      }
+    result.successful = false;
+    result.reason = "no parameters loaded";
+    return result;
+  }
 
-      get_parameter("subscribers.name", names);
+  std::map<std::string, ParameterValues> parameters = parseFromParametersMap(old_parameters);
+
+  // And then merge them
+  for (const rclcpp::Parameter & parameter : update_parameters)
+  {
+    std::vector<std::string> splits = rcpputils::split(parameter.get_name(), '.');
+    if (splits.size() != 3)
+    {
+      RCLCPP_WARN(get_logger(), "Invalid or unknown parameter '%s', ignoring", parameter.get_name().c_str());
+      result.successful = false;
+      result.reason = "Invalid or unknown parameter";
+      break;
     }
-    else if (parameter.get_name() == "subscribers.topic")
+    if (splits[0] != "subscribers")
     {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_STRING_ARRAY)
-      {
-        result.successful = false;
-        result.reason = "subscribers.topic must be a list of strings";
-        break;
-      }
-
-      get_parameter("subscribers.topics", topics);
+      RCLCPP_WARN(get_logger(), "Unknown parameter prefix '%s', ignoring", parameter.get_name().c_str());
+      result.successful = false;
+      result.reason = "Unknown parameter prefix";
+      break;
     }
-    else if (parameter.get_name() == "subscribers.timeout")
-    {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY)
-      {
-        result.successful = false;
-        result.reason = "subscribers.timeout must be a list of doubles";
-        break;
-      }
 
-      get_parameter("subscribers.timeout", timeouts);
+    const std::string & input_name = splits[1];
+    const std::string & parameter_name = splits[2];
+
+    if (!addInputToParameterMap(parameters, input_name, parameter_name, parameter))
+    {
+      result.successful = false;
+      result.reason = "Invalid parameter";
+      break;
     }
-    else if (parameter.get_name() == "subscribers.priority")
+  }
+  for (const std::pair<std::string, ParameterValues> & parameter : parameters)
+  {
+    if (parameter.second == ParameterValues())
     {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
-      {
-        result.successful = false;
-        result.reason = "subscribers.timeout must be a list of integers";
-        break;
-      }
-
-      get_parameter("subscribers.priority", priorities);
+      parameters.erase(parameter.first);
     }
-    else if (parameter.get_name() == "subscribers.short_desc")
+  }
+  if (result.successful)
+  {
+    if (parametersAreValid(parameters))
     {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_STRING_ARRAY)
-      {
-        result.successful = false;
-        result.reason = "subscribers.short_desc must be a list of strings";
-        break;
-      }
-
-      get_parameter("subscribers.short_desc", short_descs);
+      configureFromParameters(parameters);
     }
     else
     {
       result.successful = false;
-      result.reason = "unknown parameter";
-      break;
+      result.reason = "Incomplete parameters";
     }
-  }
-
-  if (names.size() != topics.size() || names.size() != timeouts.size() ||
-      names.size() != priorities.size() || names.size() != short_descs.size())
-  {
-    result.successful = false;
-    result.reason = "Number of names, topics, timeouts, priorities, and short_descs must be the same";
-  }
-
-  if (result.successful)
-  {
-    configureFromParameters(names, topics, timeouts, priorities, short_descs);
   }
 
   return result;
