@@ -9,12 +9,13 @@
      allowed topic if no messages are received after a configured timeout. All topics, together with their
      priority and timeout are configured through a YAML file, that can be reload at runtime.
   </description>
-  <maintainer email="jihoonl@yujinrobot.com">Jihoon Lee</maintainer>
+  <maintainer email="clalancette@openrobotics.org">Chris Lalancette</maintainer>
   <license>BSD</license>
-  <url type="website">http://ros.org/wiki/yocs_cmd_vel_mux</url>
-  <url type="repository">https://github.com/yujinrobot/yujin_ocs</url>
-  <url type="bugtracker">https://github.com/yujinrobot/yujin_ocs/issues</url>
+  <url type="website">https://github.com/kobuki-base/cmd_vel_mux</url>
+  <url type="repository">https://github.com/kobuki-base/cmd_vel_mux</url>
+  <url type="bugtracker">https://github.com/kobuki-base/cmd_vel_mux/issues</url>
   <author>Jorge Santos Simon</author>
+  <author email="jihoonl@yujinrobot.com">Jihoon Lee</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
