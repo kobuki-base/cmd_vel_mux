@@ -52,9 +52,12 @@ def generate_launch_description():
     params_file = os.path.join(share_dir, 'config', 'cmd_vel_mux_params.yaml')
     with open(params_file, 'r') as f:
         params = yaml.safe_load(f)['cmd_vel_mux']['ros__parameters']
-    cmd_vel_mux_node = launch_ros.actions.Node(package='cmd_vel_mux',
-                                                     node_executable='cmd_vel_mux_node',
-                                                     output='both',
-                                                     parameters=[params])
+
+    cmd_vel_mux_node = launch_ros.actions.Node(
+        package='cmd_vel_mux',
+        node_executable='cmd_vel_mux_node',
+        output='both',
+        parameters=[params]
+    )
 
     return launch.LaunchDescription([cmd_vel_mux_node])

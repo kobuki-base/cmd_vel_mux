@@ -9,12 +9,12 @@
      allowed topic if no messages are received after a configured timeout. All topics, together with their
      priority and timeout are configured through a YAML file, that can be reload at runtime.
   </description>
-  <author>Jorge Santos Simon</author>
   <maintainer email="jihoonl@yujinrobot.com">Jihoon Lee</maintainer>
   <license>BSD</license>
   <url type="website">http://ros.org/wiki/yocs_cmd_vel_mux</url>
   <url type="repository">https://github.com/yujinrobot/yujin_ocs</url>
   <url type="bugtracker">https://github.com/yujinrobot/yujin_ocs/issues</url>
+  <author>Jorge Santos Simon</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
@@ -31,6 +31,17 @@
   <exec_depend>rclcpp_components</exec_depend>
   <exec_depend>rcpputils</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+
+  <!-- <test_depend>ament_cmake_copyright</test_depend> -->
+  <test_depend>ament_cmake_cppcheck</test_depend>
+  <test_depend>ament_cmake_cpplint</test_depend>
+  <test_depend>ament_cmake_flake8</test_depend>
+  <test_depend>ament_cmake_lint_cmake</test_depend>
+  <test_depend>ament_cmake_pep257</test_depend>
+  <test_depend>ament_cmake_uncrustify</test_depend>
+  <test_depend>ament_cmake_xmllint</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ros_testing</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

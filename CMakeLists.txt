@@ -56,4 +56,21 @@ install(DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
 )
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  find_package(ros_testing REQUIRED)
+
+  add_ros_test(test/test_cmd_vel_mux.py
+    TARGET test_cmd_vel_mux
+    TIMEOUT 30
+  )
+
+  add_ros_test(test/test_cmd_vel_mux_updates.py
+    TARGET test_cmd_vel_mux_updates
+    TIMEOUT 30
+  )
+endif()
+
 ament_package()

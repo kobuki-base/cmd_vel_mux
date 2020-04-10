@@ -51,19 +51,21 @@ def generate_launch_description():
     params_file = os.path.join(share_dir, 'config', 'cmd_vel_mux_params.yaml')
     with open(params_file, 'r') as f:
         params = yaml.safe_load(f)['cmd_vel_mux']['ros__parameters']
+
     container = ComposableNodeContainer(
-            node_name='cmd_vel_mux_container',
-            node_namespace='',
-            package='rclcpp_components',
-            node_executable='component_container',
-            composable_node_descriptions=[
-                ComposableNode(
-                    package='cmd_vel_mux',
-                    node_plugin='cmd_vel_mux::CmdVelMux',
-                    node_name='cmd_vel_mux',
-                    parameters=[params]),
-            ],
-            output='both',
+        node_name='cmd_vel_mux_container',
+        node_namespace='',
+        package='rclcpp_components',
+        node_executable='component_container',
+        composable_node_descriptions=[
+            ComposableNode(
+                package='cmd_vel_mux',
+                node_plugin='cmd_vel_mux::CmdVelMux',
+                node_name='cmd_vel_mux',
+                parameters=[params]
+            ),
+        ],
+        output='both',
     )
 
     return LaunchDescription([container])
