@@ -34,15 +34,6 @@
  ** Includes
  *****************************************************************************/
 
-#include "cmd_vel_mux/cmd_vel_mux.hpp"
-
-#include <geometry_msgs/msg/twist.hpp>
-#include <rcl_interfaces/msg/set_parameters_result.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-#include <rcpputils/split.hpp>
-#include <std_msgs/msg/string.hpp>
-
 #include <chrono>
 #include <cinttypes>
 #include <fstream>
@@ -55,6 +46,14 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "cmd_vel_mux/cmd_vel_mux.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp_components/register_node_macro.hpp"
+#include "rcpputils/split.hpp"
+#include "std_msgs/msg/string.hpp"
 
 /*****************************************************************************
 ** Namespaces
@@ -89,8 +88,8 @@ CmdVelMux::CmdVelMux(rclcpp::NodeOptions options)
   }
 
   param_cb_ =
-    add_on_set_parameters_callback(std::bind(&CmdVelMux::parameterUpdate, this,
-      std::placeholders::_1));
+    add_on_set_parameters_callback(
+    std::bind(&CmdVelMux::parameterUpdate, this, std::placeholders::_1));
 
   output_topic_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
   RCLCPP_DEBUG(get_logger(), "CmdVelMux : subscribe to output topic 'cmd_vel'");
@@ -191,10 +190,11 @@ void CmdVelMux::configureFromParameters(const std::map<std::string, ParameterVal
     const std::string & key = m.first;
     const std::shared_ptr<CmdVelSub> & values = m.second;
     if (!values->sub_) {
-      values->sub_ = this->create_subscription<geometry_msgs::msg::Twist>(values->values_.topic, 10,
-          [this,
-          key](const geometry_msgs::msg::Twist::SharedPtr msg) {cmdVelCallback(msg, key);});
-      RCLCPP_DEBUG(get_logger(), "CmdVelMux : subscribed to '%s' on topic '%s'. pr: %" PRId64 ", to: %.2f",
+      values->sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+        values->values_.topic, 10,
+        [this, key](const geometry_msgs::msg::Twist::SharedPtr msg) {cmdVelCallback(msg, key);});
+      RCLCPP_DEBUG(
+        get_logger(), "CmdVelMux : subscribed to '%s' on topic '%s'. pr: %" PRId64 ", to: %.2f",
         values->name_.c_str(), values->values_.topic.c_str(),
         values->values_.priority, values->values_.timeout);
     } else {
@@ -205,9 +205,10 @@ void CmdVelMux::configureFromParameters(const std::map<std::string, ParameterVal
 
     if (!values->timer_) {
       // Create (stopped by now) a one-shot timer for every subscriber, if it doesn't exist yet
-      values->timer_ =
-        this->create_wall_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::
-          duration<double>(values->values_.timeout)), [this, key]() {timerCallback(key);});
+      values->timer_ = this->create_wall_timer(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+          std::chrono::duration<double>(
+            values->values_.timeout)), [this, key]() {timerCallback(key);});
     }
   }
 
@@ -282,8 +283,8 @@ std::map<std::string, ParameterValues> CmdVelMux::parseFromParametersMap(
   for (const std::pair<const std::string, rclcpp::Parameter> & parameter : parameters) {
     std::vector<std::string> splits = rcpputils::split(parameter.first, '.');
     if (splits.size() != 2) {
-      RCLCPP_WARN(get_logger(), "Invalid or unknown parameter '%s', ignoring",
-        parameter.first.c_str());
+      RCLCPP_WARN(
+        get_logger(), "Invalid or unknown parameter '%s', ignoring", parameter.first.c_str());
       continue;
     }
 
@@ -365,15 +366,15 @@ rcl_interfaces::msg::SetParametersResult CmdVelMux::parameterUpdate(
   for (const rclcpp::Parameter & parameter : update_parameters) {
     std::vector<std::string> splits = rcpputils::split(parameter.get_name(), '.');
     if (splits.size() != 3) {
-      RCLCPP_WARN(get_logger(), "Invalid or unknown parameter '%s', ignoring",
-        parameter.get_name().c_str());
+      RCLCPP_WARN(
+        get_logger(), "Invalid or unknown parameter '%s', ignoring", parameter.get_name().c_str());
       result.successful = false;
       result.reason = "Invalid or unknown parameter";
       break;
     }
     if (splits[0] != "subscribers") {
-      RCLCPP_WARN(get_logger(), "Unknown parameter prefix '%s', ignoring",
-        parameter.get_name().c_str());
+      RCLCPP_WARN(
+        get_logger(), "Unknown parameter prefix '%s', ignoring", parameter.get_name().c_str());
       result.successful = false;
       result.reason = "Unknown parameter prefix";
       break;
