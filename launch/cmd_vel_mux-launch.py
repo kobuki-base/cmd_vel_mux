@@ -55,7 +55,7 @@ def generate_launch_description():
 
     cmd_vel_mux_node = launch_ros.actions.Node(
         package='cmd_vel_mux',
-        node_executable='cmd_vel_mux_node',
+        executable='cmd_vel_mux_node',
         output='both',
         parameters=[params]
     )
