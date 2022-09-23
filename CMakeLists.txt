@@ -31,14 +31,9 @@ ament_target_dependencies(${PROJECT_NAME}
   std_msgs
 )
 
-add_executable(cmd_vel_mux_node src/cmd_vel_mux_node.cpp)
-ament_target_dependencies(cmd_vel_mux_node
-  rclcpp
-)
-target_link_libraries(cmd_vel_mux_node cmd_vel_mux)
-
-rclcpp_components_register_nodes(${PROJECT_NAME}
-  "cmd_vel_mux::CmdVelMux")
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN "cmd_vel_mux::CmdVelMux"
+  EXECUTABLE cmd_vel_mux_node)
 
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
@@ -47,9 +42,6 @@ install(TARGETS ${PROJECT_NAME}
 )
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION include/${PROJECT_NAME}
-)
-install(TARGETS cmd_vel_mux_node
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY config launch
