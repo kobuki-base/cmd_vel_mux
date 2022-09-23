@@ -221,51 +221,73 @@ bool CmdVelMux::addInputToParameterMap(
   const std::string & parameter_name,
   const rclcpp::Parameter & parameter_value)
 {
-  if (parsed_parameters.count(input_name) == 0) {
-    parsed_parameters.emplace(std::make_pair(input_name, ParameterValues()));
-  }
-
   if (parameter_name == "topic") {
+    std::string topic;
+
     if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
-      parsed_parameters[input_name].topic.clear();
+      topic.clear();
     } else if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_STRING) {
-      parsed_parameters[input_name].topic = parameter_value.as_string();
+      topic = parameter_value.as_string();
     } else {
       RCLCPP_WARN(get_logger(), "topic must be a string; ignoring");
       return false;
     }
+
+    if (parsed_parameters.count(input_name) == 0) {
+      parsed_parameters.emplace(std::make_pair(input_name, ParameterValues()));
+    }
+    parsed_parameters[input_name].topic = topic;
   } else if (parameter_name == "timeout") {
+    double timeout{-1.0};
+
     if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
-      parsed_parameters[input_name].timeout = -1.0;
+      timeout = -1.0;
     } else if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_DOUBLE) {
-      parsed_parameters[input_name].timeout = parameter_value.as_double();
+      timeout = parameter_value.as_double();
     } else {
       RCLCPP_WARN(get_logger(), "timeout must be a double; ignoring");
       return false;
     }
+
+    if (parsed_parameters.count(input_name) == 0) {
+      parsed_parameters.emplace(std::make_pair(input_name, ParameterValues()));
+    }
+    parsed_parameters[input_name].timeout = timeout;
   } else if (parameter_name == "priority") {
+    int64_t priority{-1};
+
     if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
-      parsed_parameters[input_name].priority = -1;
+      priority = -1;
     } else if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER) {
-      int64_t priority = parameter_value.as_int();
+      priority = parameter_value.as_int();
       if (priority < 0 || priority > std::numeric_limits<uint32_t>::max()) {
         RCLCPP_WARN(get_logger(), "Priority out of range, must be between 0 and MAX_UINT32");
         return false;
       }
-      parsed_parameters[input_name].priority = priority;
     } else {
       RCLCPP_WARN(get_logger(), "priority must be an integer; ignoring");
       return false;
     }
+
+    if (parsed_parameters.count(input_name) == 0) {
+      parsed_parameters.emplace(std::make_pair(input_name, ParameterValues()));
+    }
+    parsed_parameters[input_name].priority = priority;
   } else if (parameter_name == "short_desc") {
+    std::string short_desc;
     if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
-      parsed_parameters[input_name].short_desc.clear();
+      short_desc.clear();
     } else if (parameter_value.get_type() == rclcpp::ParameterType::PARAMETER_STRING) {
-      parsed_parameters[input_name].short_desc = parameter_value.as_string();
+      short_desc = parameter_value.as_string();
     } else {
       RCLCPP_WARN(get_logger(), "short_desc must be a string; ignoring");
       return false;
     }
+
+    if (parsed_parameters.count(input_name) == 0) {
+      parsed_parameters.emplace(std::make_pair(input_name, ParameterValues()));
+    }
+    parsed_parameters[input_name].short_desc = short_desc;
   } else {
     RCLCPP_WARN(get_logger(), "Invalid input variable '%s'; ignored", parameter_name.c_str());
     return false;
@@ -389,11 +411,7 @@ rcl_interfaces::msg::SetParametersResult CmdVelMux::parameterUpdate(
       break;
     }
   }
-  for (const std::pair<const std::string, ParameterValues> & parameter : parameters) {
-    if (parameter.second == ParameterValues()) {
-      parameters.erase(parameter.first);
-    }
-  }
+
   if (result.successful) {
     if (parametersAreValid(parameters)) {
       configureFromParameters(parameters);
