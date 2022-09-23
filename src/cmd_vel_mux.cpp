@@ -44,6 +44,7 @@
 #include <std_msgs/msg/string.hpp>
 
 #include <chrono>
+#include <cinttypes>
 #include <fstream>
 #include <functional>
 #include <limits>
@@ -193,7 +194,7 @@ void CmdVelMux::configureFromParameters(const std::map<std::string, ParameterVal
       values->sub_ = this->create_subscription<geometry_msgs::msg::Twist>(values->values_.topic, 10,
           [this,
           key](const geometry_msgs::msg::Twist::SharedPtr msg) {cmdVelCallback(msg, key);});
-      RCLCPP_DEBUG(get_logger(), "CmdVelMux : subscribed to '%s' on topic '%s'. pr: %d, to: %.2f",
+      RCLCPP_DEBUG(get_logger(), "CmdVelMux : subscribed to '%s' on topic '%s'. pr: %" PRId64 ", to: %.2f",
         values->name_.c_str(), values->values_.topic.c_str(),
         values->values_.priority, values->values_.timeout);
     } else {
