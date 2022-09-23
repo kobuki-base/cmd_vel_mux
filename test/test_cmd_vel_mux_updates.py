@@ -50,13 +50,13 @@ import rclpy
 
 
 def flatten(d, prefix=None):
-    assert isinstance(d, collections.Mapping)
+    assert isinstance(d, collections.abc.Mapping)
 
     flat_d = {}
     for k, v in d.items():
         if prefix is not None:
             k = prefix + '.' + k
-        if isinstance(v, collections.Mapping):
+        if isinstance(v, collections.abc.Mapping):
             flat_d.update(flatten(v, prefix=k))
         else:
             flat_d[k] = v
@@ -83,8 +83,8 @@ class TestCmdVelMux(unittest.TestCase):
         def launch_cmd_vel_mux_node(self, *, parameters):
             cmd_vel_mux_node_action = launch_ros.actions.Node(
                 package='cmd_vel_mux',
-                node_executable='cmd_vel_mux_node',
-                node_name='cmd_vel_mux',
+                executable='cmd_vel_mux_node',
+                name='cmd_vel_mux',
                 parameters=[parameters],
                 output='screen'
             )

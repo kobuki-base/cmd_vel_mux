@@ -56,7 +56,7 @@ def generate_test_description():
     return launch.LaunchDescription([
         launch_ros.actions.Node(
             package='cmd_vel_mux',
-            node_executable='cmd_vel_mux_node',
+            executable='cmd_vel_mux_node',
             parameters=[path_to_cmd_vel_mux_params],
             output='screen'
         ),

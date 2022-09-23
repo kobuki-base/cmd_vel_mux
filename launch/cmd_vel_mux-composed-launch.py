@@ -53,15 +53,15 @@ def generate_launch_description():
         params = yaml.safe_load(f)['cmd_vel_mux']['ros__parameters']
 
     container = ComposableNodeContainer(
-        node_name='cmd_vel_mux_container',
-        node_namespace='',
+        name='cmd_vel_mux_container',
+        namespace='',
         package='rclcpp_components',
-        node_executable='component_container',
+        executable='component_container',
         composable_node_descriptions=[
             ComposableNode(
                 package='cmd_vel_mux',
-                node_plugin='cmd_vel_mux::CmdVelMux',
-                node_name='cmd_vel_mux',
+                plugin='cmd_vel_mux::CmdVelMux',
+                name='cmd_vel_mux',
                 parameters=[params]
             ),
         ],
