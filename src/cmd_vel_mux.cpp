@@ -110,7 +110,7 @@ bool CmdVelMux::parametersAreValid(const std::map<std::string, ParameterValues> 
 {
   std::set<int64_t> used_priorities;
 
-  for (const std::pair<std::string, ParameterValues> & parameter : parameters) {
+  for (const std::pair<const std::string, ParameterValues> & parameter : parameters) {
     if (parameter.second.topic.empty()) {
       RCLCPP_WARN(get_logger(), "Empty topic for '%s'", parameter.first.c_str());
       return false;
@@ -142,7 +142,7 @@ void CmdVelMux::configureFromParameters(const std::map<std::string, ParameterVal
 {
   std::map<std::string, std::shared_ptr<CmdVelSub>> new_map;
 
-  for (const std::pair<std::string, ParameterValues> & parameter : parameters) {
+  for (const std::pair<const std::string, ParameterValues> & parameter : parameters) {
     const std::string & key = parameter.first;
     const ParameterValues & parameter_values = parameter.second;
     // Check if parameter subscriber has all its necessary values
@@ -279,7 +279,7 @@ std::map<std::string, ParameterValues> CmdVelMux::parseFromParametersMap(
 {
   std::map<std::string, ParameterValues> parsed_parameters;
   // Iterate over all parameters and parse their content
-  for (const std::pair<std::string, rclcpp::Parameter> & parameter : parameters) {
+  for (const std::pair<const std::string, rclcpp::Parameter> & parameter : parameters) {
     std::vector<std::string> splits = rcpputils::split(parameter.first, '.');
     if (splits.size() != 2) {
       RCLCPP_WARN(get_logger(), "Invalid or unknown parameter '%s', ignoring",
@@ -388,7 +388,7 @@ rcl_interfaces::msg::SetParametersResult CmdVelMux::parameterUpdate(
       break;
     }
   }
-  for (const std::pair<std::string, ParameterValues> & parameter : parameters) {
+  for (const std::pair<const std::string, ParameterValues> & parameter : parameters) {
     if (parameter.second == ParameterValues()) {
       parameters.erase(parameter.first);
     }
