@@ -39,9 +39,6 @@
 /** Main node entry point. */
 int main(int argc, char ** argv)
 {
-  // Configures stdout stream for no buffering
-  setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
-
   rclcpp::init(argc, argv);
 
   // handle callbacks until shut down
