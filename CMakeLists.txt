@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(cmd_vel_mux)
 
+OPTION(BUILD_TESTING "Build testing." OFF)
+
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
